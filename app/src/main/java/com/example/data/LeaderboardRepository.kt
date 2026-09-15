@@ -25,7 +25,8 @@ data class LeaderboardItem(
 
 data class LeaderboardResult(
     val entries: List<LeaderboardItem>,
-    val isOffline: Boolean
+    val isOffline: Boolean,
+    val errorMessage: String? = null
 )
 
 class LeaderboardRepository(
@@ -95,63 +96,78 @@ class LeaderboardRepository(
     }
 
     suspend fun getTop100Leaderboard(): LeaderboardResult = withContext(Dispatchers.IO) {
+        var failureError: String? = null
         try {
             val snapshot = suspendCancellableCoroutine { continuation ->
-                firestore.collection(COLLECTION_LEADERBOARD)
-                    .orderBy("bestScore", Query.Direction.DESCENDING)
-                    .limit(100)
-                    .get()
-                    .addOnSuccessListener { querySnapshot ->
-                        if (continuation.isActive) continuation.resume(querySnapshot)
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e(TAG, "Firestore getTop100Leaderboard failed: ${exception.message}", exception)
-                        if (continuation.isActive) continuation.resume(null)
-                    }
+                try {
+                    firestore.collection(COLLECTION_LEADERBOARD)
+                        .orderBy("bestScore", Query.Direction.DESCENDING)
+                        .limit(100)
+                        .get()
+                        .addOnSuccessListener { querySnapshot ->
+                            if (continuation.isActive) continuation.resume(querySnapshot)
+                        }
+                        .addOnFailureListener { exception ->
+                            failureError = "${exception.javaClass.simpleName}: ${exception.message}"
+                            Log.e(TAG, "Firestore getTop100Leaderboard failed: ${exception.message}", exception)
+                            if (continuation.isActive) continuation.resume(null)
+                        }
+                } catch (e: Exception) {
+                    failureError = "${e.javaClass.simpleName}: ${e.message}"
+                    Log.e(TAG, "Firestore query invocation exception: ${e.message}", e)
+                    if (continuation.isActive) continuation.resume(null)
+                }
             }
 
-            if (snapshot != null && !snapshot.isEmpty) {
-                var currentRank = 1
-                val items = snapshot.documents.map { doc ->
-                    val username = doc.getString("username") ?: doc.id
-                    val score = (doc.getLong("bestScore") ?: 0L).toInt()
-                    val tier = (doc.getLong("highestTierReached") ?: doc.getLong("bestScoreLevel") ?: 0L).toInt()
-                    val level = (doc.getLong("bestScoreLevel") ?: 1L).toInt()
-                    val diff = doc.getString("difficultyEffective") ?: doc.getString("difficulty") ?: "Auto"
-                    val updated = doc.getLong("updatedAt") ?: System.currentTimeMillis()
-                    LeaderboardItem(
-                        rank = currentRank++,
-                        username = username,
-                        bestScore = score,
-                        highestTierReached = tier,
-                        bestScoreLevel = level,
-                        difficulty = diff,
-                        updatedAt = updated
-                    )
-                }
+            if (snapshot != null) {
+                if (!snapshot.isEmpty) {
+                    var currentRank = 1
+                    val items = snapshot.documents.map { doc ->
+                        val username = doc.getString("username") ?: doc.id
+                        val score = (doc.getLong("bestScore") ?: 0L).toInt()
+                        val tier = (doc.getLong("highestTierReached") ?: doc.getLong("bestScoreLevel") ?: 0L).toInt()
+                        val level = (doc.getLong("bestScoreLevel") ?: 1L).toInt()
+                        val diff = doc.getString("difficultyEffective") ?: doc.getString("difficulty") ?: "Auto"
+                        val updated = doc.getLong("updatedAt") ?: System.currentTimeMillis()
+                        LeaderboardItem(
+                            rank = currentRank++,
+                            username = username,
+                            bestScore = score,
+                            highestTierReached = tier,
+                            bestScoreLevel = level,
+                            difficulty = diff,
+                            updatedAt = updated
+                        )
+                    }
 
-                // Cache in local Room DB
-                val cacheEntities = items.map {
-                    CachedLeaderboardEntry(
-                        rank = it.rank,
-                        username = it.username,
-                        bestScore = it.bestScore,
-                        highestTierReached = it.highestTierReached,
-                        bestScoreLevel = it.bestScoreLevel,
-                        difficulty = it.difficulty,
-                        updatedAt = it.updatedAt
-                    )
-                }
-                database.cachedLeaderboardDao().replaceAll(cacheEntities)
+                    // Cache in local Room DB
+                    val cacheEntities = items.map {
+                        CachedLeaderboardEntry(
+                            rank = it.rank,
+                            username = it.username,
+                            bestScore = it.bestScore,
+                            highestTierReached = it.highestTierReached,
+                            bestScoreLevel = it.bestScoreLevel,
+                            difficulty = it.difficulty,
+                            updatedAt = it.updatedAt
+                        )
+                    }
+                    database.cachedLeaderboardDao().replaceAll(cacheEntities)
 
-                LeaderboardResult(entries = items, isOffline = false)
+                    LeaderboardResult(entries = items, isOffline = false)
+                } else {
+                    // Firestore query succeeded, but database collection is currently empty
+                    LeaderboardResult(entries = emptyList(), isOffline = false)
+                }
             } else {
-                // Fallback to room cache
-                loadFromCache(isOfflineFallback = snapshot == null)
+                // Fallback to room cache with captured error
+                val cached = loadFromCache(isOfflineFallback = true)
+                cached.copy(errorMessage = failureError)
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to fetch remote leaderboard: ${e.message}", e)
-            loadFromCache(isOfflineFallback = true)
+            val cached = loadFromCache(isOfflineFallback = true)
+            cached.copy(errorMessage = "${e.javaClass.simpleName}: ${e.message}")
         }
     }
 

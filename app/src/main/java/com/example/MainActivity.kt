@@ -224,6 +224,7 @@ fun ComplianceSlicerApp(
                     recentSessions = uiState.recentSessions,
                     isOffline = uiState.isLeaderboardOffline,
                     isLoading = uiState.isLeaderboardLoading,
+                    errorMessage = uiState.leaderboardErrorMessage,
                     initialTab = 0,
                     onRefresh = { viewModel.refreshLeaderboard() },
                     onBack = { viewModel.navigateTo(GamePhase.MENU) }
@@ -238,6 +239,7 @@ fun ComplianceSlicerApp(
                     recentSessions = uiState.recentSessions,
                     isOffline = uiState.isLeaderboardOffline,
                     isLoading = uiState.isLeaderboardLoading,
+                    errorMessage = uiState.leaderboardErrorMessage,
                     initialTab = 1,
                     onRefresh = { viewModel.refreshLeaderboard() },
                     onBack = { viewModel.navigateTo(GamePhase.MENU) }

@@ -77,6 +77,7 @@ fun LeaderboardScreen(
     leaderboardEntries: List<LeaderboardItem>,
     isOffline: Boolean,
     isLoading: Boolean,
+    errorMessage: String? = null,
     recentSessions: List<GameSessionRecord> = emptyList(),
     initialTab: Int = 0,
     onRefresh: () -> Unit,
@@ -206,7 +207,8 @@ fun LeaderboardScreen(
                     entries = leaderboardEntries,
                     currentUser = currentUser,
                     isOffline = isOffline,
-                    isLoading = isLoading
+                    isLoading = isLoading,
+                    errorMessage = errorMessage
                 )
             } else {
                 // MY STATS TAB
@@ -226,7 +228,8 @@ private fun GlobalLeaderboardTab(
     entries: List<LeaderboardItem>,
     currentUser: String?,
     isOffline: Boolean,
-    isLoading: Boolean
+    isLoading: Boolean,
+    errorMessage: String? = null
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Offline Banner
@@ -247,12 +250,23 @@ private fun GlobalLeaderboardTab(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.leaderboard_offline_banner),
-                    color = Color(0xFFFFCCBC),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.leaderboard_offline_banner),
+                        color = Color(0xFFFFCCBC),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (!errorMessage.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Info: $errorMessage",
+                            color = Color(0xFFFFAB91),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(10.dp))
         }

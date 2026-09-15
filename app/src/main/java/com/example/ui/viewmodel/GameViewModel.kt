@@ -72,6 +72,7 @@ data class GameUiState(
     val recentSessions: List<GameSessionRecord> = emptyList(),
     val leaderboardEntries: List<LeaderboardItem> = emptyList(),
     val isLeaderboardOffline: Boolean = false,
+    val leaderboardErrorMessage: String? = null,
     val isLeaderboardLoading: Boolean = false,
     val authErrorMessage: String? = null,
     val debugOverlayEnabled: Boolean = false,
@@ -710,6 +711,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(
                 leaderboardEntries = result.entries,
                 isLeaderboardOffline = result.isOffline,
+                leaderboardErrorMessage = result.errorMessage,
                 isLeaderboardLoading = false,
                 userStats = userStats,
                 userAvatarId = userStats?.avatarId ?: 1,
