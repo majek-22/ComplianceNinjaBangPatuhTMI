@@ -1,9 +1,13 @@
 package com.example.data
 
+import android.content.Context
 import android.util.Log
+import com.example.ComplianceApplication
 import com.example.data.local.AppDatabase
 import com.example.data.local.CachedLeaderboardEntry
 import com.example.data.local.UserStats
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -30,17 +34,35 @@ data class LeaderboardResult(
 )
 
 class LeaderboardRepository(
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val context: Context? = null
 ) {
     companion object {
         private const val TAG = "LeaderboardRepo"
         private const val COLLECTION_LEADERBOARD = "leaderboard"
     }
 
-    // TODO: add google-services.json if setting up on a new Firebase project.
-    // Ensure Firestore is enabled in Firebase Console (Test or Production rules).
-    private val firestore: FirebaseFirestore by lazy {
-        FirebaseFirestore.getInstance()
+    private fun getFirestore(): FirebaseFirestore {
+        context?.let { ctx ->
+            try {
+                if (FirebaseApp.getApps(ctx).isEmpty()) {
+                    val defaultApp = FirebaseApp.initializeApp(ctx)
+                    if (defaultApp == null) {
+                        val options = FirebaseOptions.Builder()
+                            .setApplicationId(ComplianceApplication.FIREBASE_APP_ID)
+                            .setApiKey(ComplianceApplication.FIREBASE_API_KEY)
+                            .setProjectId(ComplianceApplication.FIREBASE_PROJECT_ID)
+                            .setGcmSenderId(ComplianceApplication.FIREBASE_GCM_SENDER_ID)
+                            .setStorageBucket(ComplianceApplication.FIREBASE_STORAGE_BUCKET)
+                            .build()
+                        FirebaseApp.initializeApp(ctx.applicationContext, options)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Error ensuring Firebase init in getFirestore: ${e.message}")
+            }
+        }
+        return FirebaseFirestore.getInstance()
     }
 
     fun observeUserStats(username: String): Flow<UserStats?> {
@@ -62,7 +84,7 @@ class LeaderboardRepository(
 
         try {
             val doc = suspendCancellableCoroutine { continuation ->
-                firestore.collection(COLLECTION_LEADERBOARD).document(username).get()
+                getFirestore().collection(COLLECTION_LEADERBOARD).document(username).get()
                     .addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
                     .addOnFailureListener { if (continuation.isActive) continuation.resume(null) }
             }
@@ -100,7 +122,7 @@ class LeaderboardRepository(
         try {
             val snapshot = suspendCancellableCoroutine { continuation ->
                 try {
-                    firestore.collection(COLLECTION_LEADERBOARD)
+                    getFirestore().collection(COLLECTION_LEADERBOARD)
                         .orderBy("bestScore", Query.Direction.DESCENDING)
                         .limit(100)
                         .get()
@@ -173,16 +195,33 @@ class LeaderboardRepository(
 
     private suspend fun loadFromCache(isOfflineFallback: Boolean): LeaderboardResult {
         val cached = database.cachedLeaderboardDao().getAllDirect()
-        val items = cached.map {
-            LeaderboardItem(
-                rank = it.rank,
-                username = it.username,
-                bestScore = it.bestScore,
-                highestTierReached = it.highestTierReached,
-                bestScoreLevel = it.bestScoreLevel,
-                difficulty = it.difficulty,
-                updatedAt = it.updatedAt
-            )
+        val items = if (cached.isNotEmpty()) {
+            cached.map {
+                LeaderboardItem(
+                    rank = it.rank,
+                    username = it.username,
+                    bestScore = it.bestScore,
+                    highestTierReached = it.highestTierReached,
+                    bestScoreLevel = it.bestScoreLevel,
+                    difficulty = it.difficulty,
+                    updatedAt = it.updatedAt
+                )
+            }
+        } else {
+            // If cache from remote is empty, show local player stats
+            val localStats = database.userStatsDao().getAllStatsDirect()
+            var rank = 1
+            localStats.filter { it.overallBestScore > 0 }.map {
+                LeaderboardItem(
+                    rank = rank++,
+                    username = it.username,
+                    bestScore = it.overallBestScore,
+                    highestTierReached = it.highestTierReached,
+                    bestScoreLevel = 1,
+                    difficulty = "Normal",
+                    updatedAt = System.currentTimeMillis()
+                )
+            }
         }
         return LeaderboardResult(entries = items, isOffline = isOfflineFallback)
     }
@@ -325,7 +364,7 @@ class LeaderboardRepository(
                 "difficulty" to difficulty,
                 "updatedAt" to System.currentTimeMillis()
             )
-            firestore.collection(COLLECTION_LEADERBOARD)
+            getFirestore().collection(COLLECTION_LEADERBOARD)
                 .document(username)
                 .set(docData, SetOptions.merge())
                 .addOnSuccessListener {

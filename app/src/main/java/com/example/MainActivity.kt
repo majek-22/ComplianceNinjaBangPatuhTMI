@@ -41,6 +41,7 @@ import com.example.ui.viewmodel.GameViewModel
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ComplianceApplication.ensureFirebaseInitialized(application)
         enableEdgeToEdge()
         hideSystemNavigationBar()
         setContent {

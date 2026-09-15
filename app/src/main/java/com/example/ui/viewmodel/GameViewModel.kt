@@ -90,7 +90,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getInstance(application)
     val sessionManager = SessionManager(application)
     val authRepository = AuthRepository(database, sessionManager)
-    val leaderboardRepository = LeaderboardRepository(database)
+    val leaderboardRepository = LeaderboardRepository(database, application)
 
     val soundManager = SoundManager(application)
     val musicManager = MusicManager(application)
