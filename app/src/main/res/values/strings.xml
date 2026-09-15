@@ -395,4 +395,17 @@
     <string name="comic_ep3_title">Uang Capek</string>
     <string name="comic_ep4_title">Sponsor Sultan yang Bikin Deg-degan</string>
     <string name="comic_ep5_title">Sulap Anggaran yang Berujung Penjara</string>
+
+    <!-- How to Play Overlay -->
+    <string name="how_to_play_title">HOW TO PLAY</string>
+    <string name="how_to_play_subtitle">Tactical Compliance Ninja Directives</string>
+    <string name="how_to_play_card1_title">SLICE VIOLATIONS</string>
+    <string name="how_to_play_card1_desc">Swipe &amp; slash Fraud, Bribery &amp; Data Breaches for points and combos!</string>
+    <string name="how_to_play_card2_title">PROTECT OFFICIAL</string>
+    <string name="how_to_play_card2_desc">Do NOT slice legitimate procedures &amp; approvals. Slicing loses 1 life!</string>
+    <string name="how_to_play_card3_title">AVOID TRAPS</string>
+    <string name="how_to_play_card3_desc">Unverified rumors and decoys cost -10 points and break combo streaks.</string>
+    <string name="how_to_play_card4_title">POWER-UP BONUSES</string>
+    <string name="how_to_play_card4_desc">Slice Golden Shields for extra lives, and Freeze items to stop the clock!</string>
+    <string name="how_to_play_start_button">Got It, Start Patrol!</string>
 </resources>

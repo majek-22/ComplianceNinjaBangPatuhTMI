@@ -4,9 +4,12 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -15,6 +18,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -325,6 +331,7 @@ fun MainMenuScreen(
 
         // 4. Unified Floating AI Assistant Pill Button
         val unifiedPillShape = RoundedCornerShape(26.dp)
+        val chatInteractionSource = remember { MutableInteractionSource() }
         Surface(
             shape = unifiedPillShape,
             color = Color(0xEE07121E),
@@ -343,9 +350,13 @@ fun MainMenuScreen(
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
                 .padding(end = 14.dp, bottom = 10.dp)
+                .menuScaleAnimation(chatInteractionSource, hoverScale = 1.05f, pressScale = 1.10f)
                 .shadow(10.dp, unifiedPillShape, spotColor = Color(0x6600E5FF))
                 .clip(unifiedPillShape)
-                .clickable {
+                .clickable(
+                    interactionSource = chatInteractionSource,
+                    indication = null
+                ) {
                     coroutineScope.launch {
                         launch {
                             chatIconRotation.animateTo(
@@ -438,8 +449,41 @@ fun MainMenuScreen(
 }
 
 // =========================================================================
-// TOP BAR COMPONENT
+// TOP BAR COMPONENT & BUTTON ANIMATIONS
 // =========================================================================
+
+/**
+ * Subtle interactive scale-up animation on hover or tap/press for menu buttons.
+ */
+@Composable
+private fun Modifier.menuScaleAnimation(
+    interactionSource: MutableInteractionSource,
+    hoverScale: Float = 1.08f,
+    pressScale: Float = 1.15f
+): Modifier {
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    val targetScale = when {
+        isPressed -> pressScale
+        isHovered -> hoverScale
+        else -> 1.0f
+    }
+
+    val animatedScale by animateFloatAsState(
+        targetValue = targetScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "menu_btn_scale"
+    )
+
+    return this.graphicsLayer {
+        scaleX = animatedScale
+        scaleY = animatedScale
+    }
+}
 
 @Composable
 private fun MainMenuTopBar(
@@ -463,6 +507,7 @@ private fun MainMenuTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 1. Officer Profile Button with Username (Top-Left)
+        val profileInteraction = remember { MutableInteractionSource() }
         Surface(
             shape = RoundedCornerShape(14.dp),
             color = Color(0xDD091522),
@@ -472,13 +517,18 @@ private fun MainMenuTopBar(
                     listOf(Color(0x8800E5FF), Color(0x3300E5FF))
                 )
             ),
-            shadowElevation = 6.dp
+            shadowElevation = 6.dp,
+            modifier = Modifier.menuScaleAnimation(profileInteraction, hoverScale = 1.04f, pressScale = 1.08f)
         ) {
             Row(
                 modifier = Modifier
                     .height(38.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .clickable { onOpenProfile() }
+                    .clickable(
+                        interactionSource = profileInteraction,
+                        indication = null,
+                        onClick = onOpenProfile
+                    )
                     .padding(start = 5.dp, end = 12.dp)
                     .testTag("menu_profile_btn"),
                 verticalAlignment = Alignment.CenterVertically,
@@ -525,12 +575,18 @@ private fun MainMenuTopBar(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val comicInteraction = remember { MutableInteractionSource() }
                     // Story / Comic Button
                     Box(
                         modifier = Modifier
                             .size(34.dp)
+                            .menuScaleAnimation(comicInteraction, hoverScale = 1.12f, pressScale = 1.20f)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onOpenComic)
+                            .clickable(
+                                interactionSource = comicInteraction,
+                                indication = null,
+                                onClick = onOpenComic
+                            )
                             .testTag("menu_comic_btn"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -550,12 +606,18 @@ private fun MainMenuTopBar(
                             .background(Color(0x26FFFFFF))
                     )
 
+                    val leaderboardInteraction = remember { MutableInteractionSource() }
                     // Leaderboard Button
                     Box(
                         modifier = Modifier
                             .size(34.dp)
+                            .menuScaleAnimation(leaderboardInteraction, hoverScale = 1.12f, pressScale = 1.20f)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onOpenLeaderboard)
+                            .clickable(
+                                interactionSource = leaderboardInteraction,
+                                indication = null,
+                                onClick = onOpenLeaderboard
+                            )
                             .testTag("menu_leaderboard_btn"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -575,12 +637,18 @@ private fun MainMenuTopBar(
                             .background(Color(0x26FFFFFF))
                     )
 
+                    val glossaryInteraction = remember { MutableInteractionSource() }
                     // Rules / Glossary Button
                     Box(
                         modifier = Modifier
                             .size(34.dp)
+                            .menuScaleAnimation(glossaryInteraction, hoverScale = 1.12f, pressScale = 1.20f)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onOpenGlossary)
+                            .clickable(
+                                interactionSource = glossaryInteraction,
+                                indication = null,
+                                onClick = onOpenGlossary
+                            )
                             .testTag("menu_glossary_btn"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -610,12 +678,18 @@ private fun MainMenuTopBar(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val langInteraction = remember { MutableInteractionSource() }
                     // Language Switcher
                     Box(
                         modifier = Modifier
                             .height(34.dp)
+                            .menuScaleAnimation(langInteraction, hoverScale = 1.10f, pressScale = 1.18f)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onToggleLanguage)
+                            .clickable(
+                                interactionSource = langInteraction,
+                                indication = null,
+                                onClick = onToggleLanguage
+                            )
                             .padding(horizontal = 7.dp)
                             .testTag("menu_lang_btn"),
                         contentAlignment = Alignment.Center
@@ -651,12 +725,18 @@ private fun MainMenuTopBar(
                             .background(Color(0x26FFFFFF))
                     )
 
+                    val audioInteraction = remember { MutableInteractionSource() }
                     // Audio Mute Toggle Button
                     Box(
                         modifier = Modifier
                             .size(34.dp)
+                            .menuScaleAnimation(audioInteraction, hoverScale = 1.12f, pressScale = 1.20f)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onToggleAudioMute)
+                            .clickable(
+                                interactionSource = audioInteraction,
+                                indication = null,
+                                onClick = onToggleAudioMute
+                            )
                             .testTag("menu_audio_mute_btn"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -676,12 +756,18 @@ private fun MainMenuTopBar(
                             .background(Color(0x26FFFFFF))
                     )
 
+                    val logoutInteraction = remember { MutableInteractionSource() }
                     // Logout / Exit Button
                     Box(
                         modifier = Modifier
                             .size(34.dp)
+                            .menuScaleAnimation(logoutInteraction, hoverScale = 1.12f, pressScale = 1.20f)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onLogout)
+                            .clickable(
+                                interactionSource = logoutInteraction,
+                                indication = null,
+                                onClick = onLogout
+                            )
                             .testTag("menu_logout_btn"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1099,10 +1185,30 @@ private fun StartShiftGlowingButton(
         )
     )
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    val targetInteractiveScale = when {
+        isPressed -> 1.07f
+        isHovered -> 1.04f
+        else -> 1.0f
+    }
+
+    val interactiveScale by animateFloatAsState(
+        targetValue = targetInteractiveScale,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "start_button_interactive_scale"
+    )
+
     Button(
         onClick = onClick,
+        interactionSource = interactionSource,
         modifier = modifier
-            .scale(pulseScale)
+            .scale(pulseScale * interactiveScale)
             .width(if (isLandscape) 220.dp else 260.dp)
             .height(50.dp)
             .shadow(16.dp, buttonShape, spotColor = Color(0xFFFF5252))

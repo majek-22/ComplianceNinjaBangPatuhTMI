@@ -21,6 +21,7 @@ class SessionManager(private val context: Context) {
         val KEY_LAST_ACTIVE = longPreferencesKey("session_last_active")
         val KEY_LANGUAGE = stringPreferencesKey("app_language")
         val KEY_AUDIO_MUTED = booleanPreferencesKey("audio_muted")
+        val KEY_HAS_SEEN_HOW_TO_PLAY = booleanPreferencesKey("has_seen_how_to_play")
 
         const val THIRTY_DAYS_MILLIS = 30L * 24 * 60 * 60 * 1000L
 
@@ -51,6 +52,24 @@ class SessionManager(private val context: Context) {
 
     val isAudioMuted: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_AUDIO_MUTED] ?: false
+    }
+
+    fun hasSeenHowToPlay(username: String? = null): Flow<Boolean> = context.dataStore.data.map { prefs ->
+        val userSpecificKey = if (!username.isNullOrBlank()) {
+            booleanPreferencesKey("has_seen_how_to_play_${username.trim().lowercase()}")
+        } else {
+            KEY_HAS_SEEN_HOW_TO_PLAY
+        }
+        prefs[userSpecificKey] ?: (prefs[KEY_HAS_SEEN_HOW_TO_PLAY] ?: false)
+    }
+
+    suspend fun setHasSeenHowToPlay(username: String? = null, seen: Boolean = true) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HAS_SEEN_HOW_TO_PLAY] = seen
+            if (!username.isNullOrBlank()) {
+                prefs[booleanPreferencesKey("has_seen_how_to_play_${username.trim().lowercase()}")] = seen
+            }
+        }
     }
 
     suspend fun saveSession(username: String) {
