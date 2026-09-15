@@ -48,7 +48,6 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -56,7 +55,6 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Warning
-import com.example.ui.components.HowToPlayOverlay
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.material3.AlertDialog
@@ -416,7 +414,7 @@ fun GameScreen(
         )
 
         // Pause overlay dialog
-        if (uiState.isPaused && !uiState.shouldShowHowToPlay) {
+        if (uiState.isPaused) {
             AlertDialog(
                 onDismissRequest = { viewModel.resumeGame() },
                 title = {
@@ -426,21 +424,7 @@ fun GameScreen(
                     )
                 },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(text = stringResource(R.string.menu_subtitle))
-                        OutlinedButton(
-                            onClick = { viewModel.showHowToPlay() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.HelpOutline,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.how_to_play_title))
-                        }
-                    }
+                    Text(text = stringResource(R.string.menu_subtitle))
                 },
                 confirmButton = {
                     Button(
@@ -720,13 +704,6 @@ fun GameScreen(
                 }
             }
         }
-
-        // 7. HOW TO PLAY INSTRUCTION OVERLAY
-        HowToPlayOverlay(
-            visible = uiState.shouldShowHowToPlay,
-            onDismiss = { viewModel.dismissHowToPlay() },
-            modifier = Modifier.fillMaxSize()
-        )
     }
 }
 

@@ -81,8 +81,7 @@ data class GameUiState(
     val freezeTimeRemaining: Float = 0f,
     val freezeBonusHits: Int = 0,
     val shouldShowTrailer: Boolean = false,
-    val shouldShowComic: Boolean = false,
-    val shouldShowHowToPlay: Boolean = false
+    val shouldShowComic: Boolean = false
 )
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
@@ -105,30 +104,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var feedbackToastTimer: Float = 0f
     private var sessionCheckJob: Job? = null
     private var targetPhaseAfterSplash: GamePhase = GamePhase.LOGIN_REGISTER
-    private var hasSeenHowToPlayJob: Job? = null
-    private var hasSeenHowToPlayCached: Boolean = false
-
-    private fun updateHowToPlayObserver(username: String?) {
-        hasSeenHowToPlayJob?.cancel()
-        hasSeenHowToPlayJob = viewModelScope.launch {
-            sessionManager.hasSeenHowToPlay(username).collect { seen ->
-                hasSeenHowToPlayCached = seen
-            }
-        }
-    }
 
     init {
         setupEngineCallbacks()
         checkInitialSession()
         observePreferences()
-        updateHowToPlayObserver(null)
     }
 
     private fun checkInitialSession() {
         sessionCheckJob = viewModelScope.launch {
             val validUsername = sessionManager.getInitialValidSession()
             if (!validUsername.isNullOrBlank()) {
-                updateHowToPlayObserver(validUsername)
                 val stats = leaderboardRepository.getUserStats(validUsername)
                 val sessions = leaderboardRepository.getRecentSessions(validUsername, 10)
                 _uiState.value = _uiState.value.copy(
@@ -142,7 +128,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 targetPhaseAfterSplash = GamePhase.MENU
             } else {
-                updateHowToPlayObserver(null)
                 _uiState.value = _uiState.value.copy(
                     currentUser = null,
                     userStats = null,
@@ -344,7 +329,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(authErrorMessage = null)
             when (val result = authRepository.login(username, pass)) {
                 is AuthResult.Success -> {
-                    updateHowToPlayObserver(result.username)
                     val stats = leaderboardRepository.getUserStats(result.username)
                     val sessions = leaderboardRepository.getRecentSessions(result.username, 10)
                     delay(120L) // Allow keyboard dismissal animation to complete cleanly
@@ -372,7 +356,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(authErrorMessage = null)
             when (val result = authRepository.register(username, pass)) {
                 is AuthResult.Success -> {
-                    updateHowToPlayObserver(result.username)
                     val stats = leaderboardRepository.getUserStats(result.username)
                     val sessions = leaderboardRepository.getRecentSessions(result.username, 10)
                     delay(120L) // Allow keyboard dismissal animation to complete cleanly
@@ -409,7 +392,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         viewModelScope.launch {
-            updateHowToPlayObserver(null)
             authRepository.logout()
             musicManager.stop()
             _uiState.value = _uiState.value.copy(
@@ -505,7 +487,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         shakeTimer = 0f
         feedbackToastTimer = 0f
 
-        val showHowToPlay = !hasSeenHowToPlayCached
         _uiState.value = _uiState.value.copy(
             phase = GamePhase.PLAYING,
             score = 0,
@@ -518,44 +499,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             trapsAvoided = 0,
             trapsSliced = 0,
             starsEarned = 0,
-            isPaused = showHowToPlay,
+            isPaused = false,
             feedbackMessage = null,
             screenShakeIntensity = 0f,
             flashOverlayColor = null,
             slowMoFactor = 1.0f,
             isNewHighScore = false,
-            readyCountdown = if (showHowToPlay) 0f else 3.0f,
-            isGameOverBannerShowing = false,
-            shouldShowHowToPlay = showHowToPlay
-        )
-        if (showHowToPlay) {
-            musicManager.pause()
-        } else {
-            musicManager.playGameplayTheme()
-        }
-    }
-
-    fun dismissHowToPlay() {
-        val currentUser = _uiState.value.currentUser
-        hasSeenHowToPlayCached = true
-        val isAtStart = _uiState.value.score == 0 && engine.timeRemainingSeconds >= (_uiState.value.selectedLevel.durationSeconds - 0.5f)
-        _uiState.value = _uiState.value.copy(
-            shouldShowHowToPlay = false,
-            readyCountdown = if (isAtStart) 3.0f else _uiState.value.readyCountdown,
-            isPaused = false
+            readyCountdown = 3.0f,
+            isGameOverBannerShowing = false
         )
         musicManager.playGameplayTheme()
-        viewModelScope.launch {
-            sessionManager.setHasSeenHowToPlay(currentUser, true)
-        }
-    }
-
-    fun showHowToPlay() {
-        _uiState.value = _uiState.value.copy(
-            shouldShowHowToPlay = true,
-            isPaused = true
-        )
-        musicManager.pause()
     }
 
     fun pauseGame() {
@@ -579,7 +532,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             isPaused = false,
             readyCountdown = 0f,
             isGameOverBannerShowing = false,
-            shouldShowHowToPlay = false,
             feedbackMessage = null
         )
         musicManager.playMenuTheme()

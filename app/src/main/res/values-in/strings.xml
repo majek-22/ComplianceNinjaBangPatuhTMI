@@ -395,17 +395,4 @@
     <string name="comic_ep3_title">Uang Capek</string>
     <string name="comic_ep4_title">Sponsor Sultan yang Bikin Deg-degan</string>
     <string name="comic_ep5_title">Sulap Anggaran yang Berujung Penjara</string>
-
-    <!-- How to Play Overlay -->
-    <string name="how_to_play_title">CARA BERMAIN</string>
-    <string name="how_to_play_subtitle">Arahan Taktis Ninja Kepatuhan</string>
-    <string name="how_to_play_card1_title">TEBAS PELANGGARAN</string>
-    <string name="how_to_play_card1_desc">Usap &amp; tebas Fraud, Suap, dan Kebocoran Data untuk raih skor &amp; kombo!</string>
-    <string name="how_to_play_card2_title">LINDUNGI DOKUMEN SAH</string>
-    <string name="how_to_play_card2_desc">JANGAN tebas prosedur dan persetujuan resmi. Menebasnya mengurangi 1 nyawa!</string>
-    <string name="how_to_play_card3_title">HINDARI JEBAKAN</string>
-    <string name="how_to_play_card3_desc">Rumor belum terverifikasi &amp; jebakan mengurangi -10 poin serta reset kombo.</string>
-    <string name="how_to_play_card4_title">BONUS SPESIAL</string>
-    <string name="how_to_play_card4_desc">Tebas Perisai Emas untuk tambah nyawa, dan item Freeze untuk hentikan waktu!</string>
-    <string name="how_to_play_start_button">Mengerti, Mulai Patroli!</string>
 </resources>

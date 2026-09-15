@@ -105,6 +105,7 @@ class LeaderboardRepository(
                         if (continuation.isActive) continuation.resume(querySnapshot)
                     }
                     .addOnFailureListener { exception ->
+                        Log.e(TAG, "Firestore getTop100Leaderboard failed: ${exception.message}", exception)
                         if (continuation.isActive) continuation.resume(null)
                     }
             }
