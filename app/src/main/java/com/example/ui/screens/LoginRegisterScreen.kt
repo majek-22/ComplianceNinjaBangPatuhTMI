@@ -276,19 +276,19 @@ fun CyberNinjaInputField(
         onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
-            .shadow(if (isFocused) 6.dp else 0.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF00E5FF))
-            .clip(RoundedCornerShape(10.dp))
+            .height(38.dp)
+            .shadow(if (isFocused) 6.dp else 0.dp, shape = RoundedCornerShape(9.dp), spotColor = Color(0xFF00E5FF))
+            .clip(RoundedCornerShape(9.dp))
             .background(backgroundColor)
             .border(
                 width = if (isFocused || isError) 1.5.dp else 1.dp,
                 color = borderColor,
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(9.dp)
             )
             .testTag(testTag),
         textStyle = TextStyle(
             color = Color.White,
-            fontSize = 13.5.sp,
+            fontSize = 12.5.sp,
             fontWeight = FontWeight.Medium
         ),
         singleLine = singleLine,
@@ -301,16 +301,16 @@ fun CyberNinjaInputField(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     leadingIcon()
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.CenterStart
@@ -319,7 +319,7 @@ fun CyberNinjaInputField(
                         Text(
                             text = placeholder,
                             color = Color(0xFF607D8B),
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             maxLines = 1
                         )
                     }
@@ -499,14 +499,14 @@ fun LoginRegisterScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 36.dp),
+                        .padding(top = 48.dp, bottom = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // LEFT: Left side is transparent to showcase the Bang Patuh ninja mascot and logo from sample_loginscreen.png
                     Spacer(
                         modifier = Modifier
-                            .weight(1.1f)
+                            .weight(1.2f)
                             .fillMaxHeight()
                     )
 
@@ -546,9 +546,9 @@ fun LoginRegisterScreen(
                             }
                         },
                         modifier = Modifier
-                            .weight(1f)
-                            .widthIn(max = 380.dp)
-                            .fillMaxHeight()
+                            .weight(0.95f)
+                            .widthIn(max = 310.dp)
+                            .wrapContentHeight(align = Alignment.CenterVertically)
                     )
                 }
             } else {
@@ -556,10 +556,10 @@ fun LoginRegisterScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 42.dp)
+                        .padding(top = 56.dp, bottom = 14.dp)
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                    verticalArrangement = Arrangement.Center
                 ) {
                     // Cyber HUD Card directly over background
                     CyberNinjaHudCard(
@@ -596,7 +596,9 @@ fun LoginRegisterScreen(
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = 310.dp)
                     )
                 }
             }
@@ -690,19 +692,19 @@ fun CyberNinjaHudCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, end = 26.dp, top = 12.dp, bottom = 12.dp)
+                .padding(start = 14.dp, end = 22.dp, top = 8.dp, bottom = 8.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // TOP TABS: [ ✦ Log in ] and [ 👤 Register ]
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(7.dp))
                     .background(Color(0x40000000))
-                    .padding(3.dp),
+                    .padding(2.5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Log in Tab
@@ -710,7 +712,7 @@ fun CyberNinjaHudCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(5.dp))
                         .background(
                             if (selectedTab == 0) {
                                 Brush.horizontalGradient(
@@ -723,8 +725,8 @@ fun CyberNinjaHudCard(
                                 SolidColor(Color.Transparent)
                             }
                         )
-                        .clickable { onTabSelected(0) }
-                        .testTag("tab_login"),
+                    .clickable { onTabSelected(0) }
+                    .testTag("tab_login"),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -732,13 +734,13 @@ fun CyberNinjaHudCard(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         if (selectedTab == 0) {
-                            ShurikenIcon(modifier = Modifier.size(13.dp), color = Color(0xFF09111C))
-                            Spacer(modifier = Modifier.width(5.dp))
+                            ShurikenIcon(modifier = Modifier.size(12.dp), color = Color(0xFF09111C))
+                            Spacer(modifier = Modifier.width(4.dp))
                         }
                         Text(
                             text = stringResource(R.string.auth_login_tab),
                             color = if (selectedTab == 0) Color(0xFF09111C) else Color(0xFF90A4AE),
-                            fontSize = 12.5.sp,
+                            fontSize = 11.5.sp,
                             fontWeight = if (selectedTab == 0) FontWeight.Black else FontWeight.SemiBold
                         )
                     }
@@ -751,7 +753,7 @@ fun CyberNinjaHudCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(5.dp))
                         .background(
                             if (selectedTab == 1) {
                                 Brush.horizontalGradient(
@@ -776,13 +778,13 @@ fun CyberNinjaHudCard(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
                             tint = if (selectedTab == 1) Color(0xFF09111C) else Color(0xFF78909C),
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(13.dp)
                         )
-                        Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = stringResource(R.string.auth_register_tab),
                             color = if (selectedTab == 1) Color(0xFF09111C) else Color(0xFF90A4AE),
-                            fontSize = 12.5.sp,
+                            fontSize = 11.5.sp,
                             fontWeight = if (selectedTab == 1) FontWeight.Black else FontWeight.SemiBold
                         )
                     }
@@ -790,7 +792,7 @@ fun CyberNinjaHudCard(
             }
 
             // Heading & Subtitle
-            Column(modifier = Modifier.padding(top = 2.dp)) {
+            Column(modifier = Modifier.padding(top = 1.dp)) {
                 Text(
                     text = if (selectedTab == 0) {
                         stringResource(R.string.auth_welcome_back)
@@ -798,7 +800,7 @@ fun CyberNinjaHudCard(
                         stringResource(R.string.auth_register_welcome)
                     },
                     color = Color.White,
-                    fontSize = 17.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     fontStyle = FontStyle.Italic
                 )
@@ -809,8 +811,8 @@ fun CyberNinjaHudCard(
                         stringResource(R.string.auth_register_welcome_subtitle)
                     },
                     color = Color(0xFF90A4AE),
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp
+                    fontSize = 10.5.sp,
+                    lineHeight = 13.5.sp
                 )
             }
 
@@ -993,13 +995,13 @@ fun CyberNinjaHudCard(
                     disabledContainerColor = Color(0x3300E5FF),
                     disabledContentColor = Color(0x66FFFFFF)
                 ),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(42.dp)
+                    .height(38.dp)
                     .shadow(
-                        elevation = if (canSubmit) 10.dp else 0.dp,
-                        shape = RoundedCornerShape(10.dp),
+                        elevation = if (canSubmit) 8.dp else 0.dp,
+                        shape = RoundedCornerShape(8.dp),
                         spotColor = Color(0xFF00E5FF)
                     )
                     .testTag("auth_submit_btn")
@@ -1009,17 +1011,17 @@ fun CyberNinjaHudCard(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     ShurikenIcon(
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(13.dp),
                         color = if (canSubmit) Color(0xFF09111C) else Color(0x66FFFFFF)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = stringResource(
                             if (selectedTab == 0) R.string.auth_login_btn else R.string.auth_register_btn
                         ),
-                        fontSize = 13.5.sp,
+                        fontSize = 12.5.sp,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 1.2.sp
+                        letterSpacing = 1.1.sp
                     )
                 }
             }

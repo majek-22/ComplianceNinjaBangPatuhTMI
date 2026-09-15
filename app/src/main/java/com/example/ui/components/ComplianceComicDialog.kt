@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.os.Build
+import android.view.WindowManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,14 +26,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,6 +42,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.R
 import kotlinx.coroutines.launch
 
@@ -56,10 +63,10 @@ val COMIC_PAGES = listOf(
 
 /**
  * Transparent Comic Viewer:
- * - Tidak dibuat kotak, transparan dengan background game terlihat di belakangnya
- * - Posisi center dan agak ke atas (ideal landscape balance)
+ * - Tidak ada background shadow hitam, latar belakang game tetap terlihat jernih
+ * - Posisi persis di tengah layar (exact center)
  * - Di sudut kanan atas ada tombol 'x' kecil yang rapi
- * - Di bawah hanya ada pages 5 berupa .....
+ * - Di bawah ada dots indikator 5 halaman
  * - Bisa di-drag / swipe ke kiri dan kanan
  */
 @Composable
@@ -81,11 +88,35 @@ fun ComplianceComicDialog(
             dismissOnClickOutside = true
         )
     ) {
-        // Transparent scrim allowing game background to be visible
+        val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
+        SideEffect {
+            dialogWindowProvider?.window?.let { window ->
+                window.setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    window.attributes = window.attributes.apply {
+                        layoutInDisplayCutoutMode =
+                            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    }
+                }
+                WindowCompat.setDecorFitsSystemWindows(window, false)
+                window.setDimAmount(0f)
+                window.statusBarColor = android.graphics.Color.TRANSPARENT
+                window.navigationBarColor = android.graphics.Color.TRANSPARENT
+                val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+                insetsController.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                insetsController.hide(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+
+        // Full screen semi-transparent dark background behind the comic image
         BoxWithConstraints(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color(0x88000000))
+                .background(Color.Black.copy(alpha = 0.65f))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -93,9 +124,8 @@ fun ComplianceComicDialog(
                 )
         ) {
             val isLandscape = maxWidth > maxHeight
-            // Around 80% of screen in landscape, balanced and positioned slightly higher up
-            val maxAvailableWidth = if (isLandscape) maxWidth * 0.92f else maxWidth * 0.96f
-            val maxAvailableHeight = if (isLandscape) (maxHeight - 24.dp) * 0.90f else (maxHeight - 40.dp) * 0.75f
+            val maxAvailableWidth = if (isLandscape) maxWidth * 0.86f else maxWidth * 0.94f
+            val maxAvailableHeight = if (isLandscape) (maxHeight - 36.dp) * 0.86f else (maxHeight - 48.dp) * 0.72f
 
             val aspect = 16f / 9f
             val comicWidth: Dp
@@ -110,10 +140,7 @@ fun ComplianceComicDialog(
 
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = BiasAlignment(
-                    horizontalBias = 0f,
-                    verticalBias = if (isLandscape) -0.25f else -0.10f
-                )
+                contentAlignment = Alignment.Center
             ) {
                 Column(
                     modifier = Modifier
@@ -130,7 +157,7 @@ fun ComplianceComicDialog(
                     Box(
                         modifier = Modifier
                             .size(comicWidth, comicHeight)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(12.dp))
                     ) {
                         // Comic Horizontal Pager (draggable left and right)
                         HorizontalPager(
@@ -154,7 +181,7 @@ fun ComplianceComicDialog(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(6.dp)
-                                .size(22.dp)
+                                .size(24.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xB3000000))
                                 .border(1.dp, Color(0x66FFFFFF), CircleShape)
@@ -166,12 +193,12 @@ fun ComplianceComicDialog(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = stringResource(R.string.comic_close),
                                 tint = Color.White,
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(13.dp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Di bawah hanya ada pages 5 berupa .....
                     Row(
@@ -188,7 +215,7 @@ fun ComplianceComicDialog(
                                     .clip(CircleShape)
                                     .background(
                                         if (isSelected) Color(0xFF00E5FF)
-                                        else Color.White.copy(alpha = 0.35f)
+                                        else Color.White.copy(alpha = 0.4f)
                                     )
                                     .clickable {
                                         coroutineScope.launch {

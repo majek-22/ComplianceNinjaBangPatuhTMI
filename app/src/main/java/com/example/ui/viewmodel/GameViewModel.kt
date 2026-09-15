@@ -22,6 +22,7 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.GameSessionRecord
 import com.example.data.local.UserStats
 import com.example.engine.GameEngine
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -101,6 +102,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var flashTimer: Float = 0f
     private var shakeTimer: Float = 0f
     private var feedbackToastTimer: Float = 0f
+    private var sessionCheckJob: Job? = null
     private var targetPhaseAfterSplash: GamePhase = GamePhase.LOGIN_REGISTER
 
     init {
@@ -110,22 +112,45 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun checkInitialSession() {
-        viewModelScope.launch {
-            // No auto-login: player must always explicitly click Login or Register button
-            _uiState.value = _uiState.value.copy(
-                currentUser = null,
-                highScore = 0,
-                shouldShowComic = false
-            )
-            targetPhaseAfterSplash = GamePhase.LOGIN_REGISTER
+        sessionCheckJob = viewModelScope.launch {
+            val validUsername = sessionManager.getInitialValidSession()
+            if (!validUsername.isNullOrBlank()) {
+                val stats = leaderboardRepository.getUserStats(validUsername)
+                val sessions = leaderboardRepository.getRecentSessions(validUsername, 10)
+                _uiState.value = _uiState.value.copy(
+                    currentUser = validUsername,
+                    userStats = stats,
+                    userAvatarId = stats?.avatarId ?: 1,
+                    recentSessions = sessions,
+                    highScore = stats?.overallBestScore ?: 0,
+                    shouldShowComic = true,
+                    authErrorMessage = null
+                )
+                targetPhaseAfterSplash = GamePhase.MENU
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    currentUser = null,
+                    userStats = null,
+                    highScore = 0,
+                    shouldShowComic = false,
+                    authErrorMessage = null
+                )
+                targetPhaseAfterSplash = GamePhase.LOGIN_REGISTER
+            }
         }
     }
 
     fun onSplashFinished() {
         if (_uiState.value.phase == GamePhase.SPLASH) {
-            _uiState.value = _uiState.value.copy(phase = targetPhaseAfterSplash)
-            if (targetPhaseAfterSplash == GamePhase.MENU) {
-                musicManager.playMenuTheme()
+            viewModelScope.launch {
+                sessionCheckJob?.join()
+                _uiState.value = _uiState.value.copy(
+                    phase = targetPhaseAfterSplash,
+                    shouldShowComic = if (targetPhaseAfterSplash == GamePhase.MENU) true else _uiState.value.shouldShowComic
+                )
+                if (targetPhaseAfterSplash == GamePhase.MENU) {
+                    musicManager.playMenuTheme()
+                }
             }
         }
     }

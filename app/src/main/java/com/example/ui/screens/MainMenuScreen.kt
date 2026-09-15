@@ -138,6 +138,11 @@ fun MainMenuScreen(
 
     var showChatPopup by remember { mutableStateOf(false) }
     var showComicDialog by remember(shouldShowComic) { mutableStateOf(shouldShowComic) }
+    LaunchedEffect(shouldShowComic) {
+        if (shouldShowComic) {
+            showComicDialog = true
+        }
+    }
     val coroutineScope = rememberCoroutineScope()
     val chatIconRotation = remember { Animatable(0f) }
 
@@ -318,99 +323,74 @@ fun MainMenuScreen(
             }
         }
 
-        // 4. Floating AI Chatbot with "AI Assistant" text at its left
-        val chatButtonShape = CircleShape
-        Row(
+        // 4. Unified Floating AI Assistant Pill Button
+        val unifiedPillShape = RoundedCornerShape(26.dp)
+        Surface(
+            shape = unifiedPillShape,
+            color = Color(0xEE07121E),
+            border = BorderStroke(
+                1.5.dp,
+                Brush.horizontalGradient(
+                    listOf(
+                        Color(0xFF00E5FF),
+                        Color(0xFF00A3E0),
+                        GoldSecondary
+                    )
+                )
+            ),
+            shadowElevation = 8.dp,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(end = 14.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // "AI Assistant" text label badge
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = Color(0xCC060E18),
-                border = BorderStroke(
-                    1.dp,
-                    Brush.horizontalGradient(
-                        listOf(Color(0x8800E5FF), Color(0x4438BDF8))
-                    )
-                ),
-                shadowElevation = 4.dp,
-                modifier = Modifier
-                    .offset(y = 4.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable {
-                        coroutineScope.launch {
-                            launch {
-                                chatIconRotation.animateTo(
-                                    targetValue = chatIconRotation.value + 360f,
-                                    animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing)
-                                )
-                            }
-                            delay(220)
-                            showChatPopup = true
+                .padding(end = 14.dp, bottom = 10.dp)
+                .shadow(10.dp, unifiedPillShape, spotColor = Color(0x6600E5FF))
+                .clip(unifiedPillShape)
+                .clickable {
+                    coroutineScope.launch {
+                        launch {
+                            chatIconRotation.animateTo(
+                                targetValue = chatIconRotation.value + 360f,
+                                animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing)
+                            )
                         }
+                        delay(220)
+                        showChatPopup = true
                     }
-                    .testTag("menu_ai_assistant_label")
+                }
+                .testTag("menu_ask_me_button")
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 12.dp, end = 5.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Online indicator dot + "AI Assistant" text
                 Row(
-                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.5.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.5.dp)
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(5.5.dp)
+                            .size(5.dp)
                             .clip(CircleShape)
                             .background(Color(0xFF00E676))
                     )
                     Text(
                         text = "AI Assistant",
                         color = Color(0xFFE0F7FA),
-                        fontSize = 10.5.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.3.sp
                     )
                 }
-            }
 
-            // Chatbot button
-            Surface(
-                shape = chatButtonShape,
-                color = Color.Transparent,
-                border = BorderStroke(
-                    2.dp,
-                    Brush.linearGradient(
-                        listOf(
-                            Color(0xFF38BDF8),
-                            Color(0xFF00A3E0),
-                            GoldSecondary
-                        )
-                    )
-                ),
-                modifier = Modifier
-                    .size(56.dp)
-                    .shadow(12.dp, chatButtonShape, spotColor = Color(0x8800A3E0))
-                    .clip(chatButtonShape)
-                    .clickable {
-                        coroutineScope.launch {
-                            launch {
-                                chatIconRotation.animateTo(
-                                    targetValue = chatIconRotation.value + 360f,
-                                    animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing)
-                                )
-                            }
-                            delay(220)
-                            showChatPopup = true
-                        }
-                    }
-                    .testTag("menu_ask_me_button")
-            ) {
+                // Chatbot circular icon inside the unified pill
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x3300E5FF))
+                        .border(1.dp, Color(0x9900E5FF), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -424,15 +404,15 @@ fun MainMenuScreen(
                         contentScale = ContentScale.Crop
                     )
 
-                    // Online indicator dot
+                    // Mini online dot on chatbot icon
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(top = 4.dp, end = 4.dp)
-                            .size(8.dp)
+                            .padding(top = 2.dp, end = 2.dp)
+                            .size(7.dp)
                             .clip(CircleShape)
                             .background(Color(0xFF00E676))
-                            .border(1.dp, Color.White, CircleShape)
+                            .border(1.dp, Color(0xFF07121E), CircleShape)
                     )
                 }
             }
@@ -478,211 +458,240 @@ private fun MainMenuTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 4.dp),
+            .padding(bottom = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Officer badge with avatar, clickable to open Profile
+        // 1. Officer Profile Button with Username (Top-Left)
         Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0x44000000),
-            border = BorderStroke(1.dp, Color(0x5564B5F6)),
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { onOpenProfile() }
-                .testTag("menu_profile_btn")
+            shape = RoundedCornerShape(14.dp),
+            color = Color(0xDD091522),
+            border = BorderStroke(
+                1.dp,
+                Brush.horizontalGradient(
+                    listOf(Color(0x8800E5FF), Color(0x3300E5FF))
+                )
+            ),
+            shadowElevation = 6.dp
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .height(38.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable { onOpenProfile() }
+                    .padding(start = 5.dp, end = 12.dp)
+                    .testTag("menu_profile_btn"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val avatarRes = AvatarHelper.getAvatarRes(userAvatarId, currentUser ?: "")
-                Box(
+                Image(
+                    painter = painterResource(id = avatarRes),
+                    contentDescription = stringResource(R.string.profile_title),
                     modifier = Modifier
-                        .size(26.dp)
+                        .size(28.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF0097D4))
-                        .border(1.dp, GoldSecondary, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = avatarRes),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
+                        .border(1.2.dp, Color(0xFF00E5FF), CircleShape)
+                )
                 Text(
-                    text = currentUser ?: "Officer",
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    text = currentUser?.ifBlank { "Player" } ?: "Player",
+                    color = Color(0xFFE0F7FA),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
 
-        // Action cluster: Comic, Rankings, Rules, Language, Mute, Logout
+        // 2. High-Tech Action HUD Modules (Right)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Comic Button (Same size as Rankings button)
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clickable(onClick = onOpenComic)
-                    .testTag("menu_comic_btn"),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x44000000))
-                        .border(1.2.dp, Color(0xFF00E5FF), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MenuBook,
-                        contentDescription = stringResource(R.string.menu_comic_button),
-                        tint = Color(0xFF00E5FF),
-                        modifier = Modifier.size(16.dp)
+            // MODULE 1: Game Features Dock (Story Comic, Leaderboard, Rules)
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xDD091522),
+                border = BorderStroke(
+                    1.dp,
+                    Brush.horizontalGradient(
+                        listOf(Color(0x5500E5FF), Color(0x3364B5F6), Color(0x44FFD54F))
                     )
-                }
-            }
-
-            // Rankings Button
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clickable(onClick = onOpenLeaderboard)
-                    .testTag("menu_leaderboard_btn"),
-                contentAlignment = Alignment.Center
+                ),
+                shadowElevation = 6.dp
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x44000000))
-                        .border(1.2.dp, Color(0x66FFD54F), CircleShape),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = stringResource(R.string.menu_leaderboard),
-                        tint = GoldSecondary,
-                        modifier = Modifier.size(16.dp)
+                    // Story / Comic Button
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onOpenComic)
+                            .testTag("menu_comic_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = stringResource(R.string.menu_comic_button),
+                            tint = Color(0xFF00E5FF),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
+                    // Tactical Vertical Hairline Divider
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(16.dp)
+                            .background(Color(0x26FFFFFF))
                     )
-                }
-            }
 
-            // Rules / Glossary Button
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clickable(onClick = onOpenGlossary)
-                    .testTag("menu_glossary_btn"),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x44000000))
-                        .border(1.2.dp, Color(0x6664B5F6), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Book,
-                        contentDescription = stringResource(R.string.menu_glossary),
-                        tint = Color(0xFF64B5F6),
-                        modifier = Modifier.size(16.dp)
+                    // Leaderboard Button
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onOpenLeaderboard)
+                            .testTag("menu_leaderboard_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.EmojiEvents,
+                            contentDescription = stringResource(R.string.menu_leaderboard),
+                            tint = GoldSecondary,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
+                    // Tactical Vertical Hairline Divider
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(16.dp)
+                            .background(Color(0x26FFFFFF))
                     )
-                }
-            }
 
-            // Language toggle
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clickable(onClick = onToggleLanguage)
-                    .testTag("menu_lang_btn"),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x44000000))
-                        .border(1.2.dp, GoldSecondary.copy(alpha = 0.7f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(
-                        targetState = currentLanguage,
-                        animationSpec = tween(250),
-                        label = "language_toggle_crossfade"
-                    ) { lang ->
-                        Text(
-                            text = if (lang == "in" || lang == "id") "ID" else "EN",
-                            color = GoldSecondary,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black
+                    // Rules / Glossary Button
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onOpenGlossary)
+                            .testTag("menu_glossary_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Book,
+                            contentDescription = stringResource(R.string.menu_glossary),
+                            tint = Color(0xFF64B5F6),
+                            modifier = Modifier.size(17.dp)
                         )
                     }
                 }
             }
 
-            // Audio mute toggle
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clickable(onClick = onToggleAudioMute)
-                    .testTag("menu_audio_mute_btn"),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x44000000))
-                        .border(
-                            1.2.dp,
-                            if (isAudioMuted) Color(0x88FF5252) else Color(0x884FCB8F),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isAudioMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
-                        contentDescription = "Mute",
-                        tint = if (isAudioMuted) Color(0xFFFF5252) else MintSuccess,
-                        modifier = Modifier.size(16.dp)
+            // MODULE 2: System Settings & Logout Dock (Language, Audio, Exit)
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xDD091522),
+                border = BorderStroke(
+                    1.dp,
+                    Brush.horizontalGradient(
+                        listOf(Color(0x33FFFFFF), Color(0x44FF5252))
                     )
-                }
-            }
+                ),
+                shadowElevation = 6.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Language Switcher
+                    Box(
+                        modifier = Modifier
+                            .height(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onToggleLanguage)
+                            .padding(horizontal = 7.dp)
+                            .testTag("menu_lang_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Crossfade(
+                            targetState = currentLanguage,
+                            animationSpec = tween(250),
+                            label = "language_toggle_crossfade"
+                        ) { lang ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Text(
+                                    text = "🌐",
+                                    fontSize = 11.sp
+                                )
+                                Text(
+                                    text = if (lang == "in" || lang == "id") "ID" else "EN",
+                                    color = GoldSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+                        }
+                    }
 
-            // Logout button
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clickable(onClick = onLogout)
-                    .testTag("menu_logout_btn"),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x44FF5252))
-                        .border(1.2.dp, Color(0x88FF5252), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = stringResource(R.string.auth_logout),
-                        tint = Color(0xFFFF8A80),
-                        modifier = Modifier.size(16.dp)
+                    // Tactical Vertical Hairline Divider
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(16.dp)
+                            .background(Color(0x26FFFFFF))
                     )
+
+                    // Audio Mute Toggle Button
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onToggleAudioMute)
+                            .testTag("menu_audio_mute_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isAudioMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                            contentDescription = "Audio Mute",
+                            tint = if (isAudioMuted) Color(0xFFFF5252) else Color(0xFF00E676),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
+                    // Tactical Vertical Hairline Divider
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(16.dp)
+                            .background(Color(0x26FFFFFF))
+                    )
+
+                    // Logout / Exit Button
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(onClick = onLogout)
+                            .testTag("menu_logout_btn"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = stringResource(R.string.auth_logout),
+                            tint = Color(0xFFFF5252),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
                 }
             }
         }

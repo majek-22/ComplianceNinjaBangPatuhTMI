@@ -22,16 +22,16 @@ class SessionManager(private val context: Context) {
         val KEY_LANGUAGE = stringPreferencesKey("app_language")
         val KEY_AUDIO_MUTED = booleanPreferencesKey("audio_muted")
 
-        const val SEVEN_DAYS_MILLIS = 7L * 24 * 60 * 60 * 1000L
+        const val THIRTY_DAYS_MILLIS = 30L * 24 * 60 * 60 * 1000L
 
         /**
          * Pure function to determine if a session is still valid.
-         * Sessions expire after 7 days of inactivity.
+         * Sessions expire after 30 days of inactivity.
          */
         fun isSessionValid(lastActiveMillis: Long, nowMillis: Long): Boolean {
             if (lastActiveMillis <= 0L) return false
             val elapsed = nowMillis - lastActiveMillis
-            return elapsed in 0..SEVEN_DAYS_MILLIS
+            return elapsed in 0..THIRTY_DAYS_MILLIS
         }
     }
 
