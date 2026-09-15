@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -61,8 +62,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -134,6 +138,8 @@ fun MainMenuScreen(
 
     var showChatPopup by remember { mutableStateOf(false) }
     var showComicDialog by remember(shouldShowComic) { mutableStateOf(shouldShowComic) }
+    val coroutineScope = rememberCoroutineScope()
+    val chatIconRotation = remember { Animatable(0f) }
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
@@ -312,52 +318,123 @@ fun MainMenuScreen(
             }
         }
 
-        // 4. Floating AI Chatbot Button at Bottom-Right
+        // 4. Floating AI Chatbot with "AI Assistant" text at its left
         val chatButtonShape = CircleShape
-        Surface(
-            shape = chatButtonShape,
-            color = Color.Transparent,
-            border = BorderStroke(
-                2.dp,
-                Brush.linearGradient(
-                    listOf(
-                        Color(0xFF38BDF8),
-                        Color(0xFF00A3E0),
-                        GoldSecondary
-                    )
-                )
-            ),
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(end = 14.dp, bottom = 10.dp)
-                .size(56.dp)
-                .shadow(12.dp, chatButtonShape, spotColor = Color(0x8800A3E0))
-                .clip(chatButtonShape)
-                .clickable { showChatPopup = true }
-                .testTag("menu_ask_me_button")
+                .padding(end = 14.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            // "AI Assistant" text label badge
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xCC060E18),
+                border = BorderStroke(
+                    1.dp,
+                    Brush.horizontalGradient(
+                        listOf(Color(0x8800E5FF), Color(0x4438BDF8))
+                    )
+                ),
+                shadowElevation = 4.dp,
+                modifier = Modifier
+                    .offset(y = 4.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable {
+                        coroutineScope.launch {
+                            launch {
+                                chatIconRotation.animateTo(
+                                    targetValue = chatIconRotation.value + 360f,
+                                    animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing)
+                                )
+                            }
+                            delay(220)
+                            showChatPopup = true
+                        }
+                    }
+                    .testTag("menu_ai_assistant_label")
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_chatbot),
-                    contentDescription = stringResource(R.string.menu_ask_me),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.5.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.5.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF00E676))
+                    )
+                    Text(
+                        text = "AI Assistant",
+                        color = Color(0xFFE0F7FA),
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.3.sp
+                    )
+                }
+            }
 
-                // Online indicator dot
+            // Chatbot button
+            Surface(
+                shape = chatButtonShape,
+                color = Color.Transparent,
+                border = BorderStroke(
+                    2.dp,
+                    Brush.linearGradient(
+                        listOf(
+                            Color(0xFF38BDF8),
+                            Color(0xFF00A3E0),
+                            GoldSecondary
+                        )
+                    )
+                ),
+                modifier = Modifier
+                    .size(56.dp)
+                    .shadow(12.dp, chatButtonShape, spotColor = Color(0x8800A3E0))
+                    .clip(chatButtonShape)
+                    .clickable {
+                        coroutineScope.launch {
+                            launch {
+                                chatIconRotation.animateTo(
+                                    targetValue = chatIconRotation.value + 360f,
+                                    animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing)
+                                )
+                            }
+                            delay(220)
+                            showChatPopup = true
+                        }
+                    }
+                    .testTag("menu_ask_me_button")
+            ) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 4.dp, end = 4.dp)
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF00E676))
-                        .border(1.dp, Color.White, CircleShape)
-                )
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_chatbot),
+                        contentDescription = stringResource(R.string.menu_ask_me),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                rotationZ = chatIconRotation.value
+                            },
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // Online indicator dot
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 4.dp, end = 4.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF00E676))
+                            .border(1.dp, Color.White, CircleShape)
+                    )
+                }
             }
         }
 

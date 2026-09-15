@@ -145,6 +145,8 @@
     <string name="alert_trap_sliced">TRAP SLICED! -10 PTS (Unverified Situation)</string>
     <string name="freeze_bonus_title">FREEZE BONUS! 5 SECONDS</string>
     <string name="freeze_bonus_subtitle">Slice as much as you can to seize bonus score!</string>
+    <string name="freeze_bonus_hud_title">❄️ FREEZE BONUS! ❄️</string>
+    <string name="freeze_bonus_corruptor_sub">Slash Corruptor Freely! %1$d Slashes (+%2$d Points)</string>
     <string name="freeze_bonus_complete">FREEZE OVER! +%1$d PTS (%2$d Slices)</string>
 
     <!-- Glossary Screen -->

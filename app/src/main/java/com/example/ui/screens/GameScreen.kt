@@ -464,12 +464,13 @@ fun GameScreen(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    val isIndonesian = uiState.currentLanguage == "in" || uiState.currentLanguage == "id"
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "❄️ FREEZE BONUS! ❄️",
+                            text = if (isIndonesian) "❄️ BONUS BEKU! ❄️" else "❄️ FREEZE BONUS! ❄️",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFF00E5FF)
@@ -491,8 +492,13 @@ fun GameScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(3.dp))
+                    val corruptorBonusText = if (isIndonesian) {
+                        "Tebas Corruptor Bebas! ${uiState.freezeBonusHits} Tebasan (+${uiState.freezeBonusHits * 10} Poin)"
+                    } else {
+                        "Slash Corruptor Freely! ${uiState.freezeBonusHits} Slashes (+${uiState.freezeBonusHits * 10} Points)"
+                    }
                     Text(
-                        text = "Tebas Corruptor Bebas! ${uiState.freezeBonusHits} Tebasan (+${uiState.freezeBonusHits * 10} Poin)",
+                        text = corruptorBonusText,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFFD700)

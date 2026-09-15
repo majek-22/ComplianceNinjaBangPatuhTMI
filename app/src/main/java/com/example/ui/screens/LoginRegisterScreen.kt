@@ -638,6 +638,8 @@ fun CyberNinjaHudCard(
     } else {
         username.isNotBlank() && password.isNotBlank()
     }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Box(
         modifier = modifier
@@ -909,7 +911,10 @@ fun CyberNinjaHudCard(
                     keyboardType = KeyboardType.Password
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { if (canSubmit) onSubmit() }
+                    onDone = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
                 ),
                 testTag = "password_input"
             )
@@ -1019,116 +1024,13 @@ fun CyberNinjaHudCard(
                 }
             }
 
-            // "Or continue with" Divider
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Canvas(modifier = Modifier.weight(1f).height(1.dp)) {
-                    drawLine(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color.Transparent, Color(0x4400E5FF))
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset(size.width, 0f)
-                    )
-                }
-                Text(
-                    text = stringResource(R.string.auth_or_continue_with),
-                    color = Color(0xFF78909C),
-                    fontSize = 10.5.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-                Canvas(modifier = Modifier.weight(1f).height(1.dp)) {
-                    drawLine(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0x4400E5FF), Color.Transparent)
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset(size.width, 0f)
-                    )
-                }
-            }
-
-            // Social & SSO Login Icons: Microsoft, Google, Officer SSO
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Microsoft Office 365 / Corporate Login
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x50000000))
-                        .border(1.dp, Color(0x4400E5FF), RoundedCornerShape(8.dp))
-                        .clickable {
-                            onUsernameChange("ms_officer")
-                            onPasswordChange("123456")
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    MicrosoftLogoIcon(modifier = Modifier.size(16.dp))
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                // Google Login
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x50000000))
-                        .border(1.dp, Color(0x4400E5FF), RoundedCornerShape(8.dp))
-                        .clickable {
-                            onUsernameChange("g_officer")
-                            onPasswordChange("123456")
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    GoogleLogoIcon(modifier = Modifier.size(16.dp))
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                // Corporate Officer ID / SSO Login
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x50000000))
-                        .border(1.dp, Color(0x4400E5FF), RoundedCornerShape(8.dp))
-                        .clickable {
-                            onUsernameChange("ninja01")
-                            onPasswordChange("123456")
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF00A4EF)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Officer SSO",
-                            tint = Color.White,
-                            modifier = Modifier.size(13.dp)
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Footer Link: "Don't have an account? Register now →" / "Already have an account? Log in →"
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 2.dp)
+                    .padding(top = 4.dp)
                     .clickable {
                         onTabSelected(if (selectedTab == 0) 1 else 0)
                     }

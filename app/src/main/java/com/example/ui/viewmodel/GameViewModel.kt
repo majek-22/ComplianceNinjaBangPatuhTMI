@@ -111,27 +111,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun checkInitialSession() {
         viewModelScope.launch {
-            val username = sessionManager.getInitialValidSession()
-            if (username != null) {
-                val stats = leaderboardRepository.getUserStats(username)
-                val sessions = leaderboardRepository.getRecentSessions(username, 10)
-                _uiState.value = _uiState.value.copy(
-                    currentUser = username,
-                    userStats = stats,
-                    userAvatarId = stats?.avatarId ?: 1,
-                    recentSessions = sessions,
-                    highScore = stats?.overallBestScore ?: 0,
-                    shouldShowComic = true
-                )
-                targetPhaseAfterSplash = GamePhase.MENU
-            } else {
-                _uiState.value = _uiState.value.copy(
-                    currentUser = null,
-                    highScore = 0,
-                    shouldShowComic = false
-                )
-                targetPhaseAfterSplash = GamePhase.LOGIN_REGISTER
-            }
+            // No auto-login: player must always explicitly click Login or Register button
+            _uiState.value = _uiState.value.copy(
+                currentUser = null,
+                highScore = 0,
+                shouldShowComic = false
+            )
+            targetPhaseAfterSplash = GamePhase.LOGIN_REGISTER
         }
     }
 

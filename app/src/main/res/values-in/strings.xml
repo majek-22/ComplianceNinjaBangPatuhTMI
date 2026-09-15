@@ -145,6 +145,8 @@
     <string name="alert_trap_sliced">JEBAKAN DITEBAS! -10 POIN (Situasi Belum Terverifikasi)</string>
     <string name="freeze_bonus_title">FREEZE BONUS! 5 DETIK</string>
     <string name="freeze_bonus_subtitle">Bebas tebas sebanyak-banyaknya untuk raih skor bonus!</string>
+    <string name="freeze_bonus_hud_title">❄️ BONUS BEKU! ❄️</string>
+    <string name="freeze_bonus_corruptor_sub">Tebas Corruptor Bebas! %1$d Tebasan (+%2$d Poin)</string>
     <string name="freeze_bonus_complete">FREEZE SELESAI! +%1$d POIN (%2$d Tebasan)</string>
 
     <!-- Glossary Screen -->
