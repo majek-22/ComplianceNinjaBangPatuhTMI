@@ -1,0 +1,60 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Deep Crimson Red -->
+    <path
+        android:fillColor="#C62828"
+        android:strokeColor="#EF5350"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#8E0000"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Legal Document Background -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:strokeColor="#CFD8DC"
+        android:strokeWidth="1.5"
+        android:pathData="M26,22 L56,22 L68,34 L68,74 L26,74 Z" />
+    <!-- Document corner fold -->
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M56,22 L56,34 L68,34 Z" />
+
+    <!-- Text Lines -->
+    <path
+        android:strokeColor="#78909C"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M32,32 L50,32 M32,40 L62,40 M32,48 L46,48" />
+
+    <!-- Cracked Red Fault Line cutting across signature -->
+    <path
+        android:strokeColor="#FF1744"
+        android:strokeWidth="2.5"
+        android:strokeLineJoin="round"
+        android:pathData="M28,62 L38,56 L44,66 L52,58 L62,64" />
+
+    <!-- Deceptive Mask Overlap -->
+    <path
+        android:fillColor="#FFCA28"
+        android:strokeColor="#FFA000"
+        android:strokeWidth="1.5"
+        android:pathData="M50,44 C50,44 54,40 64,40 C74,40 78,44 78,44 C78,54 74,66 64,66 C54,66 50,54 50,44 Z" />
+    <!-- Mask Eyes (Slanted Devious Eyes) -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M56,48 Q60,46 62,50 Q58,51 56,48 Z" />
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M66,50 Q68,46 72,48 Q70,51 66,50 Z" />
+    <!-- Mask Devious Grin -->
+    <path
+        android:strokeColor="#D84315"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M58,58 Q64,62 70,58" />
+</vector>

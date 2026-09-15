@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Hexagonal Violation Badge -->
+    <path
+        android:fillColor="#E65100"
+        android:strokeColor="#FF8A50"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 L84,26 L84,70 L48,90 L12,70 L12,26 Z" />
+    <path
+        android:fillColor="#C63F00"
+        android:pathData="M48,12 L78,29 L78,67 L48,84 L18,67 L18,29 Z" />
+
+    <!-- Open Vault Safe door -->
+    <path
+        android:fillColor="#334155"
+        android:strokeColor="#94A3B8"
+        android:strokeWidth="2"
+        android:pathData="M26,30 L54,30 L54,66 L26,66 Z" />
+    <path
+        android:fillColor="#475569"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="2"
+        android:pathData="M54,30 L72,24 L72,60 L54,66 Z" />
+    <!-- Empty vault interior -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M30,34 L50,34 L50,62 L30,62 Z" />
+    <!-- Siphoned money stream flying out -->
+    <path
+        android:strokeColor="#34D399"
+        android:strokeWidth="2.5"
+        android:pathData="M38,48 Q54,38 68,52" />
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M68,52 a3.5,3.5 0 1 0 0,7 a3.5,3.5 0 1 0 0,-7 z" />
+</vector>

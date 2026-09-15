@@ -1,0 +1,49 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Sky Blue Cool Reassuring -->
+    <path
+        android:fillColor="#0277BD"
+        android:strokeColor="#29B6F6"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#01436F"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Clean Formal Document -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#B0BEC5"
+        android:strokeWidth="1.5"
+        android:pathData="M28,20 L54,20 L68,34 L68,74 L28,74 Z" />
+    <!-- Folded Corner -->
+    <path
+        android:fillColor="#CFD8DC"
+        android:pathData="M54,20 L54,34 L68,34 Z" />
+
+    <!-- Neat Typography Lines -->
+    <path
+        android:strokeColor="#0288D1"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M34,30 L48,30 M34,38 L62,38 M34,46 L62,46 M34,54 L52,54" />
+
+    <!-- Ribbon Under Seal -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M56,64 L50,78 L56,75 L62,78 Z M62,64 L58,78 L64,75 L68,77 Z" />
+
+    <!-- Official Red/Gold Wax Seal Stamp -->
+    <path
+        android:fillColor="#C62828"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="1.5"
+        android:pathData="M60,56 A8,8 0 1 0 60,72 A8,8 0 1 0 60,56 Z" />
+    <!-- Star on Stamp -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M60,60 L61.5,63 L65,63.5 L62.5,66 L63,69.5 L60,68 L57,69.5 L57.5,66 L55,63.5 L58.5,63 Z" />
+</vector>

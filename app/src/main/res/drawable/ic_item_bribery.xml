@@ -1,0 +1,62 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Burnt Orange Warm Alarm -->
+    <path
+        android:fillColor="#E65100"
+        android:strokeColor="#FF8A50"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+
+    <!-- Inner Shadow Badge -->
+    <path
+        android:fillColor="#BF360C"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Cash Bills peeking from envelope -->
+    <path
+        android:fillColor="#43A047"
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="1.5"
+        android:pathData="M30,30 L66,24 L68,44 L32,50 Z" />
+    <path
+        android:fillColor="#66BB6A"
+        android:strokeColor="#388E3C"
+        android:strokeWidth="1.5"
+        android:pathData="M28,36 L68,36 L68,52 L28,52 Z" />
+    <!-- Dollar sign on cash -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,39 L50,39 C51,39 52,39.5 52,40.5 C52,41.5 51,42 49,42.5 C47,43 46,43.5 46,45 C46,46 47,47 49,47 L51,47 M49,38 L49,48"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.2" />
+
+    <!-- Envelope Body -->
+    <path
+        android:fillColor="#FFF8E1"
+        android:strokeColor="#FFE082"
+        android:strokeWidth="2"
+        android:pathData="M24,42 L72,42 L72,70 L24,70 Z" />
+
+    <!-- Envelope Flap (Opened downwards/fold) -->
+    <path
+        android:fillColor="#FFE082"
+        android:strokeColor="#FFB300"
+        android:strokeWidth="2"
+        android:pathData="M24,42 L48,58 L72,42" />
+
+    <!-- Envelope Side folds -->
+    <path
+        android:strokeColor="#FFE082"
+        android:strokeWidth="1.5"
+        android:pathData="M24,70 L42,54 M72,70 L54,54" />
+
+    <!-- Warning Slice Tag: Peeking Coins -->
+    <path
+        android:fillColor="#FFD54F"
+        android:strokeColor="#FFA000"
+        android:strokeWidth="1"
+        android:pathData="M64,36 A5,5 0 1 0 64,46 A5,5 0 1 0 64,36 Z" />
+</vector>

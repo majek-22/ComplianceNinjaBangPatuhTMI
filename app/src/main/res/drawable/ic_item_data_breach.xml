@@ -1,0 +1,58 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Deep Ruby / Violet Red -->
+    <path
+        android:fillColor="#AD1457"
+        android:strokeColor="#EC407A"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#6A0033"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Padlock Open Shackle (Broken Ajar) -->
+    <path
+        android:strokeColor="#FFCA28"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M36,46 L36,34 C36,26 44,22 52,22 C60,22 66,26 66,32 L66,38" />
+
+    <!-- Padlock Body (Cracked) -->
+    <path
+        android:fillColor="#FFA000"
+        android:strokeColor="#FF6F00"
+        android:strokeWidth="2"
+        android:pathData="M30,46 L66,46 C68,46 70,48 70,50 L70,72 C70,74 68,76 66,76 L30,76 C28,76 26,74 26,72 L26,50 C26,48 28,46 30,46 Z" />
+
+    <!-- Keyhole with breach burst -->
+    <path
+        android:fillColor="#3E2723"
+        android:pathData="M48,54 A4,4 0 1 0 48,62 A4,4 0 1 0 48,54 Z M46,60 L50,60 L51,68 L45,68 Z" />
+
+    <!-- Crack on lock -->
+    <path
+        android:strokeColor="#D50000"
+        android:strokeWidth="2"
+        android:pathData="M48,46 L44,52 L50,56 L47,68" />
+
+    <!-- Spilling Binary / Data Fragments -->
+    <!-- "0" -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M72,32 C74,32 75,34 75,37 L75,41 C75,44 74,46 72,46 C70,46 69,44 69,41 L69,37 C69,34 70,32 72,32 Z M72,35 C71.5,35 71,36 71,38 L71,40 C71,42 71.5,43 72,43 C72.5,43 73,42 73,40 L73,38 C73,36 72.5,35 72,35 Z" />
+    <!-- "1" -->
+    <path
+        android:fillColor="#76FF03"
+        android:pathData="M22,34 L25,32 L25,44 L23,44 L23,35 L21,36 Z" />
+    <!-- "1" -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M76,56 L79,54 L79,64 L77,64 L77,57 L75,58 Z" />
+    <!-- Bits/spark squares -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M20,54 L24,54 L24,58 L20,58 Z M72,68 L76,68 L76,72 L72,72 Z" />
+</vector>

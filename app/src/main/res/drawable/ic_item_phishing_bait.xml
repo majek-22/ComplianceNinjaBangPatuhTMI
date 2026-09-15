@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Diamond Trap Badge: Soft Purple / Amber -->
+    <path
+        android:fillColor="#7E22CE"
+        android:strokeColor="#C084FC"
+        android:strokeWidth="3.5"
+        android:pathData="M48,8 L88,48 L48,88 L8,48 Z" />
+    <path
+        android:fillColor="#581C87"
+        android:pathData="M48,16 L80,48 L48,80 L16,48 Z" />
+
+    <!-- Fishing Hook -->
+    <path
+        android:strokeColor="#E2E8F0"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M48,24 V44 C48,54 36,54 36,44 L32,48" />
+    <!-- Suspicious Urgency Envelope dangling on hook -->
+    <path
+        android:fillColor="#FEF08A"
+        android:strokeColor="#EAB308"
+        android:strokeWidth="1.5"
+        android:pathData="M40,44 L64,44 L64,62 L40,62 Z M40,44 L52,53 L64,44" />
+    <!-- Red Question / Caution mark -->
+    <path
+        android:fillColor="#F43F5E"
+        android:pathData="M50,48 h4 v4 h-4 z M50,54 h4 v2 h-4 z" />
+</vector>

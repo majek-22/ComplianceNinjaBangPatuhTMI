@@ -1,0 +1,73 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Dark Alarming Obsidian & Crimson Ring -->
+    <path
+        android:fillColor="#311B92"
+        android:strokeColor="#FF1744"
+        android:strokeWidth="4"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#1A0033"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Central Bank / Corporate Vault Building -->
+    <!-- Pediment Roof -->
+    <path
+        android:fillColor="#CFD8DC"
+        android:strokeColor="#90A4AE"
+        android:strokeWidth="1.5"
+        android:pathData="M32,38 L48,26 L64,38 Z" />
+    <!-- Building Architrave -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:pathData="M30,38 L66,38 L66,42 L30,42 Z" />
+    <!-- Columns -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:pathData="M34,42 L38,42 L38,62 L34,62 Z M42,42 L46,42 L46,62 L42,62 Z M50,42 L54,42 L54,62 L50,62 Z M58,42 L62,42 L62,62 L58,62 Z" />
+    <!-- Base -->
+    <path
+        android:fillColor="#CFD8DC"
+        android:pathData="M28,62 L68,62 L68,66 L28,66 Z" />
+
+    <!-- Corruption Tentacles Entangling the Building -->
+    <!-- Left Bottom Tentacle -->
+    <path
+        android:fillColor="#880E4F"
+        android:strokeColor="#D81B60"
+        android:strokeWidth="1.5"
+        android:pathData="M22,70 C24,56 34,50 36,44 C34,42 30,46 26,52 C22,60 20,68 22,70 Z" />
+    <!-- Suction cups -->
+    <path
+        android:fillColor="#FF80AB"
+        android:pathData="M27,56 A2,2 0 1 0 27,60 A2,2 0 1 0 27,56 Z M32,48 A1.5,1.5 0 1 0 32,51 A1.5,1.5 0 1 0 32,48 Z" />
+
+    <!-- Right Wrap Tentacle -->
+    <path
+        android:fillColor="#880E4F"
+        android:strokeColor="#D81B60"
+        android:strokeWidth="1.5"
+        android:pathData="M74,70 C72,54 60,48 58,42 C62,40 66,46 70,52 C74,60 76,68 74,70 Z" />
+    <!-- Suction cups -->
+    <path
+        android:fillColor="#FF80AB"
+        android:pathData="M69,56 A2,2 0 1 0 69,60 A2,2 0 1 0 69,56 Z M64,48 A1.5,1.5 0 1 0 64,51 A1.5,1.5 0 1 0 64,48 Z" />
+
+    <!-- Top Wrapping Tentacle -->
+    <path
+        android:fillColor="#4A148C"
+        android:strokeColor="#AA00FF"
+        android:strokeWidth="1.5"
+        android:pathData="M38,24 C46,18 56,22 60,30 C58,32 54,28 48,26 C42,24 38,26 38,24 Z" />
+
+    <!-- Glowing Corrupt Eye/Aura in Center -->
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M48,50 A4,4 0 1 0 48,58 A4,4 0 1 0 48,50 Z" />
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M48,52 A2,2 0 1 0 48,56 A2,2 0 1 0 48,52 Z" />
+</vector>

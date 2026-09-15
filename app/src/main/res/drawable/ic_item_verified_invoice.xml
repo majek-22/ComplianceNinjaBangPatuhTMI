@@ -1,0 +1,56 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Deep Cyan Reassuring -->
+    <path
+        android:fillColor="#00838F"
+        android:strokeColor="#4DD0E1"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#004D54"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Receipt / Invoice Sheet (Jagged Bottom) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#B0BEC5"
+        android:strokeWidth="1.5"
+        android:pathData="M26,20 L70,20 L70,72 L66,68 L62,72 L58,68 L54,72 L50,68 L46,72 L42,68 L38,72 L34,68 L30,72 L26,68 Z" />
+
+    <!-- Barcode at Top of Invoice -->
+    <path
+        android:strokeColor="#37474F"
+        android:strokeWidth="2"
+        android:pathData="M32,26 L32,32 M36,26 L36,32 M38,26 L38,32 M42,26 L42,32 M46,26 L46,32 M48,26 L48,32 M52,26 L52,32 M56,26 L56,32 M60,26 L60,32 M64,26 L64,32" />
+
+    <!-- Dotted Divider -->
+    <path
+        android:strokeColor="#90A4AE"
+        android:strokeWidth="1"
+        android:pathData="M30,36 L66,36" />
+
+    <!-- Itemized Lines -->
+    <path
+        android:strokeColor="#78909C"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M32,42 L52,42 M58,42 L64,42 M32,48 L48,48 M58,48 L64,48 M32,54 L44,54 M56,54 L64,54" />
+
+    <!-- Verified Green Stamp Box (Angled/Slanted) -->
+    <path
+        android:fillColor="#E8F5E9"
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="2"
+        android:pathData="M40,56 L70,52 L72,66 L42,70 Z" />
+
+    <!-- Checkmark Inside Stamp -->
+    <path
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M46,63 L51,66 L66,57" />
+</vector>

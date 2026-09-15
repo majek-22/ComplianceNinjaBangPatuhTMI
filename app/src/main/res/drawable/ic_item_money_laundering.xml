@@ -1,0 +1,62 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Deep Amber / Rust -->
+    <path
+        android:fillColor="#D84315"
+        android:strokeColor="#FF7043"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#8C2500"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Washing Machine Drum Outer Rim -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:strokeColor="#B0BEC5"
+        android:strokeWidth="2"
+        android:pathData="M48,22 A26,26 0 1 0 48,74 A26,26 0 1 0 48,22 Z" />
+
+    <!-- Drum Porthole Window (Dark Blue Water) -->
+    <path
+        android:fillColor="#0277BD"
+        android:pathData="M48,26 A22,22 0 1 0 48,70 A22,22 0 1 0 48,26 Z" />
+
+    <!-- Circular Wash Arrows -->
+    <path
+        android:strokeColor="#81D4FA"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M38,36 A14,14 0 0 1 60,34 M60,60 A14,14 0 0 1 36,58" />
+    <!-- Arrow heads -->
+    <path
+        android:fillColor="#81D4FA"
+        android:pathData="M60,31 L64,36 L58,37 Z M36,63 L32,58 L38,57 Z" />
+
+    <!-- Swirling Cash Bill -->
+    <path
+        android:fillColor="#66BB6A"
+        android:strokeColor="#2E7D32"
+        android:strokeWidth="1.2"
+        android:pathData="M38,44 L56,40 L60,52 L42,56 Z" />
+    <!-- Dollar sign in cash -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M49,46 L51,46 C52,46 53,46.5 53,47.5 C53,48 52,48.5 50,49 C49,49.5 48,50 48,51 L51,51 M49,45 L49,52"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1" />
+
+    <!-- Water Bubbles / Suds -->
+    <path
+        android:fillColor="#E1F5FE"
+        android:pathData="M34,48 A3,3 0 1 0 34,54 A3,3 0 1 0 34,48 Z" />
+    <path
+        android:fillColor="#E1F5FE"
+        android:pathData="M62,44 A2.5,2.5 0 1 0 62,49 A2.5,2.5 0 1 0 62,44 Z" />
+    <path
+        android:fillColor="#B3E5FC"
+        android:pathData="M46,62 A3,3 0 1 0 46,68 A3,3 0 1 0 46,62 Z" />
+</vector>

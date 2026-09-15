@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Star Bonus Badge -->
+    <path
+        android:fillColor="#D97706"
+        android:strokeColor="#FDE047"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#B45309"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- 5-point Star Medal -->
+    <path
+        android:fillColor="#FDE047"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M48,22 L54,36 L70,37 L58,48 L62,64 L48,54 L34,64 L38,48 L26,37 L42,36 Z" />
+    <!-- Star core -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M48,32 L51,40 L60,41 L53,47 L55,56 L48,51 L41,56 L43,47 L36,41 L45,40 Z" />
+    <!-- Honor Ribbons beneath -->
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M38,62 L32,76 L42,72 L44,62 Z M58,62 L64,76 L54,72 L52,62 Z" />
+</vector>

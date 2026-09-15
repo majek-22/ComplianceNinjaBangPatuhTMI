@@ -1,0 +1,69 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Trap Badge: Alarming Red-Orange tone with dashed unverified indicator -->
+    <path
+        android:fillColor="#C2185B"
+        android:strokeColor="#F06292"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#880E4F"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Dashed Ring Motif -->
+    <path
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2"
+        android:pathData="M48,16 A32,32 0 1 0 48,80 A32,32 0 1 0 48,16 Z" />
+
+    <!-- Document Sheet -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:strokeColor="#CFD8DC"
+        android:strokeWidth="1.5"
+        android:pathData="M28,24 L56,24 L68,36 L68,74 L28,74 Z" />
+    <path
+        android:fillColor="#B0BEC5"
+        android:pathData="M56,24 L56,36 L68,36 Z" />
+
+    <!-- Standard text rows -->
+    <path
+        android:strokeColor="#78909C"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M34,36 L50,36 M34,44 L62,44 M34,52 L48,52" />
+
+    <!-- Accidental Clerical Red Pen Squiggle / Typo loop -->
+    <path
+        android:strokeColor="#FF1744"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M34,62 C38,58 42,66 46,60 C50,64 54,58 58,62" />
+
+    <!-- Red Editing Pen -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M58,52 L64,46 L68,50 L62,56 Z" />
+    <path
+        android:fillColor="#D50000"
+        android:pathData="M58,52 L56,58 L62,56 Z" />
+
+    <!-- Question Mark Stamp badge -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M66,18 A13,13 0 1 0 66,44 A13,13 0 1 0 66,18 Z" />
+    <path
+        android:fillColor="#FFD54F"
+        android:strokeColor="#FFF"
+        android:strokeWidth="0.8"
+        android:pathData="M66,20 A11,11 0 1 0 66,42 A11,11 0 1 0 66,20 Z" />
+    <path
+        android:strokeColor="#C2185B"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M63,26 C63,23 69,23 69,27 C69,30 66,31 66,34 M66,37 L66,38" />
+</vector>

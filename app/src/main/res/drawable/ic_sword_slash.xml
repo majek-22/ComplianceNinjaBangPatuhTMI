@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="28dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Blade tip and edge -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20.71,4.04 C20.9,3.85 20.9,3.53 20.71,3.34 C20.51,3.15 20.2,3.15 20.01,3.34 L12.5,10.85 L10.5,8.85 L9.09,10.26 L11.09,12.26 L3.34,20.01 C3.15,20.2 3.15,20.51 3.34,20.71 C3.53,20.9 3.85,20.9 4.04,20.71 L11.79,12.96 L13.79,14.96 L15.2,13.55 L13.2,11.55 L20.71,4.04 Z" />
+    <!-- Crossguard & Hilt Accent -->
+    <path
+        android:fillColor="#FFE082"
+        android:pathData="M8.5,12.5 L11.5,15.5 L10.5,16.5 L7.5,13.5 Z" />
+    <!-- Slice trail speedlines -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.6"
+        android:pathData="M6,10 L3,13 M9,5 L5,9" />
+</vector>

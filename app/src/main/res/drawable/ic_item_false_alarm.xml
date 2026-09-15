@@ -1,0 +1,64 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Trap Badge: Alarming Amber-Red tone with dashed unverified indicator -->
+    <path
+        android:fillColor="#D84315"
+        android:strokeColor="#FF8A65"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#BF360C"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Dashed Ring Indicator (Unverified / Decoy Trap) -->
+    <path
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2.5"
+        android:pathData="M48,16 A32,32 0 1 0 48,80 A32,32 0 1 0 48,16 Z" />
+
+    <!-- Alarm Bell Dome -->
+    <path
+        android:fillColor="#FFA726"
+        android:strokeColor="#FF6F00"
+        android:strokeWidth="2"
+        android:pathData="M48,26 C40,26 34,34 34,48 L30,58 L66,58 L62,48 C62,34 56,26 48,26 Z" />
+
+    <!-- Bell Clapper -->
+    <path
+        android:fillColor="#FFE082"
+        android:strokeColor="#FF8F00"
+        android:strokeWidth="1.5"
+        android:pathData="M43,58 C43,62 45,65 48,65 C51,65 53,62 53,58 Z" />
+
+    <!-- Top Bell Ring -->
+    <path
+        android:strokeColor="#FFE082"
+        android:strokeWidth="2.5"
+        android:pathData="M48,22 A3,3 0 1 0 48,27 A3,3 0 1 0 48,22 Z" />
+
+    <!-- Small Vibrating Sound Waves -->
+    <path
+        android:strokeColor="#FFCC80"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M24,42 C22,46 22,50 24,54 M72,42 C74,46 74,50 72,54" />
+
+    <!-- Question Mark Stamp (Decoy / Unconfirmed Tip) -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M64,22 A14,14 0 1 0 64,50 A14,14 0 1 0 64,22 Z" />
+    <path
+        android:fillColor="#FFD54F"
+        android:strokeColor="#FFF"
+        android:strokeWidth="0.8"
+        android:pathData="M64,24 A12,12 0 1 0 64,48 A12,12 0 1 0 64,24 Z" />
+    <!-- White Question Mark Symbol -->
+    <path
+        android:strokeColor="#D84315"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M61,31 C61,28 67,28 67,32 C67,35 64,36 64,39 M64,43 L64,44" />
+</vector>

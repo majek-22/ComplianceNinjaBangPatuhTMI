@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Badge Background: Teal Cool Reassuring -->
+    <path
+        android:fillColor="#00695C"
+        android:strokeColor="#4DB6AC"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#004D40"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Left Hand / Cuff (Corporate Blue) -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M22,38 L34,44 L28,62 L18,54 Z" />
+    <!-- Left Hand Wrist -->
+    <path
+        android:fillColor="#FFCC80"
+        android:pathData="M32,43 L38,46 L34,58 L28,55 Z" />
+
+    <!-- Right Hand / Cuff (Dark Navy) -->
+    <path
+        android:fillColor="#37474F"
+        android:pathData="M74,38 L62,44 L68,62 L78,54 Z" />
+    <!-- Right Hand Wrist -->
+    <path
+        android:fillColor="#FFE082"
+        android:pathData="M64,43 L58,46 L62,58 L68,55 Z" />
+
+    <!-- Clasped Handshake Fingers -->
+    <path
+        android:fillColor="#FFB74D"
+        android:strokeColor="#F57C00"
+        android:strokeWidth="1.2"
+        android:pathData="M38,46 C42,42 46,42 50,46 L58,48 C58,54 52,60 48,60 L42,60 C38,58 36,52 38,46 Z" />
+
+    <!-- Interlocked Thumb & Grip -->
+    <path
+        android:strokeColor="#E65100"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M42,50 L52,52 M43,54 L51,56" />
+
+    <!-- Partnership Trust Sparkle / Diamond Star -->
+    <path
+        android:fillColor="#80CBC4"
+        android:pathData="M48,24 L50,30 L56,32 L50,34 L48,40 L46,34 L40,32 L46,30 Z" />
+</vector>

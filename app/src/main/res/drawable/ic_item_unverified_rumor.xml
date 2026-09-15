@@ -1,0 +1,61 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Trap Badge: Alarming Crimson-Orange tone with dashed unverified indicator -->
+    <path
+        android:fillColor="#E64A19"
+        android:strokeColor="#FF7043"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#BF360C"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Dashed Ring Motif -->
+    <path
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2"
+        android:pathData="M48,16 A32,32 0 1 0 48,80 A32,32 0 1 0 48,16 Z" />
+
+    <!-- Speech Bubble Main -->
+    <path
+        android:fillColor="#FFF3E0"
+        android:strokeColor="#FFB74D"
+        android:strokeWidth="2"
+        android:pathData="M24,28 C24,22 32,20 48,20 C64,20 72,22 72,28 C72,42 64,48 52,48 L44,48 L32,58 L34,48 C26,46 24,38 24,28 Z" />
+
+    <!-- Whispering Gossip Dots inside speech bubble -->
+    <path
+        android:fillColor="#FF8A65"
+        android:pathData="M34,34 A3,3 0 1 0 34,40 A3,3 0 1 0 34,34 Z" />
+    <path
+        android:fillColor="#FF8A65"
+        android:pathData="M44,34 A3,3 0 1 0 44,40 A3,3 0 1 0 44,34 Z" />
+    <path
+        android:fillColor="#FF8A65"
+        android:pathData="M54,34 A3,3 0 1 0 54,40 A3,3 0 1 0 54,34 Z" />
+
+    <!-- Secondary mini rumor bubble -->
+    <path
+        android:fillColor="#FFE082"
+        android:strokeColor="#FFA000"
+        android:strokeWidth="1.5"
+        android:pathData="M56,52 C56,48 62,46 68,46 C74,46 78,48 78,52 C78,56 75,58 70,58 L66,64 L67,58 C63,58 56,56 56,52 Z" />
+
+    <!-- Question Mark Stamp badge -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M66,20 A13,13 0 1 0 66,46 A13,13 0 1 0 66,20 Z" />
+    <path
+        android:fillColor="#FFD54F"
+        android:strokeColor="#FFF"
+        android:strokeWidth="0.8"
+        android:pathData="M66,22 A11,11 0 1 0 66,44 A11,11 0 1 0 66,22 Z" />
+    <path
+        android:strokeColor="#E64A19"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M63,28 C63,25 69,25 69,29 C69,32 66,33 66,36 M66,39 L66,40" />
+</vector>

@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Circular Legitimate Badge -->
+    <path
+        android:fillColor="#1E40AF"
+        android:strokeColor="#60A5FA"
+        android:strokeWidth="3.5"
+        android:pathData="M48,6 A42,42 0 1 0 48,90 A42,42 0 1 0 48,6 Z" />
+    <path
+        android:fillColor="#172554"
+        android:pathData="M48,12 A36,36 0 1 0 48,84 A36,36 0 1 0 48,12 Z" />
+
+    <!-- Open Book / Training Manual -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="2"
+        android:pathData="M24,42 Q48,46 48,70 Q48,46 72,42 L72,36 Q48,40 48,64 Q48,40 24,36 Z" />
+    <!-- Graduation Cap over book -->
+    <path
+        android:fillColor="#38BDF8"
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1.5"
+        android:pathData="M48,22 L72,32 L48,42 L24,32 Z" />
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M38,37 L38,47 Q48,52 58,47 L58,37 Z" />
+    <!-- Golden tassel -->
+    <path
+        android:strokeColor="#FBBF24"
+        android:strokeWidth="2"
+        android:pathData="M48,32 L66,38 L68,48" />
+</vector>
