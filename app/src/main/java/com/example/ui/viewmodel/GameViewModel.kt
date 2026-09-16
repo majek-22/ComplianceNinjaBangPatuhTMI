@@ -89,7 +89,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getInstance(application)
     val sessionManager = SessionManager(application)
-    val authRepository = AuthRepository(database, sessionManager)
+    val authRepository = AuthRepository(database, sessionManager, application)
     val leaderboardRepository = LeaderboardRepository(database, application)
 
     val soundManager = SoundManager(application)
@@ -330,15 +330,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(authErrorMessage = null)
             when (val result = authRepository.login(username, pass)) {
                 is AuthResult.Success -> {
-                    val stats = leaderboardRepository.getUserStats(result.username)
+                    val (stats, allTimeBest) = leaderboardRepository.fetchAndSyncUserStats(result.username)
                     val sessions = leaderboardRepository.getRecentSessions(result.username, 10)
                     delay(120L) // Allow keyboard dismissal animation to complete cleanly
                     _uiState.value = _uiState.value.copy(
                         currentUser = result.username,
                         userStats = stats,
-                        userAvatarId = stats?.avatarId ?: 1,
+                        userAvatarId = stats.avatarId,
                         recentSessions = sessions,
-                        highScore = stats?.overallBestScore ?: 0,
+                        highScore = allTimeBest,
                         phase = GamePhase.MENU,
                         shouldShowComic = true,
                         authErrorMessage = null
@@ -357,15 +357,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(authErrorMessage = null)
             when (val result = authRepository.register(username, pass)) {
                 is AuthResult.Success -> {
-                    val stats = leaderboardRepository.getUserStats(result.username)
+                    val (stats, allTimeBest) = leaderboardRepository.fetchAndSyncUserStats(result.username)
                     val sessions = leaderboardRepository.getRecentSessions(result.username, 10)
                     delay(120L) // Allow keyboard dismissal animation to complete cleanly
                     _uiState.value = _uiState.value.copy(
                         currentUser = result.username,
                         userStats = stats,
-                        userAvatarId = stats?.avatarId ?: 1,
+                        userAvatarId = stats.avatarId,
                         recentSessions = sessions,
-                        highScore = stats?.overallBestScore ?: 0,
+                        highScore = allTimeBest,
                         phase = GamePhase.MENU,
                         shouldShowComic = true,
                         authErrorMessage = null
