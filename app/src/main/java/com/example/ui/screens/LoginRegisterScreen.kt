@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import com.example.ui.components.LanguageDropdownMenu
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -365,6 +366,7 @@ fun LoginRegisterScreen(
     onRegister: (username: String, pass: String) -> Unit,
     onResetPassword: (suspend (username: String, newPass: String) -> AuthResult)? = null,
     onToggleLanguage: () -> Unit,
+    onSelectLanguage: ((String) -> Unit)? = null,
     onToggleAudioMute: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -433,13 +435,17 @@ fun LoginRegisterScreen(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                var showLanguageMenu by remember { mutableStateOf(false) }
                 // Sleek Language Selector Pill matching attachment "🌐 EN ⌵"
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color(0x800A1118))
                         .border(1.dp, Color(0x5500E5FF), RoundedCornerShape(20.dp))
-                        .clickable(onClick = onToggleLanguage)
+                        .clickable(onClick = {
+                            showLanguageMenu = true
+                            onToggleLanguage()
+                        })
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .testTag("language_toggle_btn"),
                     contentAlignment = Alignment.Center
@@ -464,7 +470,11 @@ fun LoginRegisterScreen(
                             )
                         }
                         Text(
-                            text = if (currentLanguage == "in") "ID" else "EN",
+                            text = when (currentLanguage.lowercase()) {
+                                "ja" -> "JA"
+                                "in", "id" -> "ID"
+                                else -> "EN"
+                            },
                             color = Color.White,
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold
@@ -476,6 +486,18 @@ fun LoginRegisterScreen(
                             modifier = Modifier.size(16.dp)
                         )
                     }
+
+                    LanguageDropdownMenu(
+                        expanded = showLanguageMenu,
+                        currentLanguage = currentLanguage,
+                        onDismissRequest = { showLanguageMenu = false },
+                        onLanguageSelected = { selectedLang ->
+                            showLanguageMenu = false
+                            if (onSelectLanguage != null) {
+                                onSelectLanguage(selectedLang)
+                            }
+                        }
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -637,10 +659,10 @@ fun LoginRegisterScreen(
                 onSuccess = { user, newPass ->
                     username = user
                     password = newPass
-                    resetSuccessNotification = if (currentLanguage == "in" || currentLanguage == "id") {
-                        "Password berhasil diubah! Silakan tekan MASUK."
-                    } else {
-                        "Password updated successfully! Please tap LOG IN."
+                    resetSuccessNotification = when {
+                        currentLanguage.lowercase() == "ja" -> "パスワードを更新しました！ログインしてください。"
+                        currentLanguage == "in" || currentLanguage == "id" -> "Password berhasil diubah! Silakan tekan MASUK."
+                        else -> "Password updated successfully! Please tap LOG IN."
                     }
                     showResetPasswordDialog = false
                 }
@@ -1153,6 +1175,7 @@ fun ResetPasswordDialog(
     onSuccess: (username: String, newPass: String) -> Unit
 ) {
     val isId = currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true)
+    val isJa = currentLanguage.equals("ja", ignoreCase = true)
     var resetUsername by remember { mutableStateOf(initialUsername) }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -1201,14 +1224,14 @@ fun ResetPasswordDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = if (isId) "Atur Ulang Kata Sandi" else "Reset Password",
+                    text = if (isJa) "パスワード再設定" else if (isId) "Atur Ulang Kata Sandi" else "Reset Password",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Black
                 )
 
                 Text(
-                    text = if (isId) "Masukkan username dan kata sandi baru akun Anda." else "Enter your username and set a new password.",
+                    text = if (isJa) "登録済みのユーザー名と新しいパスワードを入力してください。" else if (isId) "Masukkan username dan kata sandi baru akun Anda." else "Enter your username and set a new password.",
                     color = Color(0xFF90A4AE),
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
@@ -1242,7 +1265,7 @@ fun ResetPasswordDialog(
                         resetUsername = input.filter { it.isLetterOrDigit() }.take(10)
                         errorMessage = null
                     },
-                    placeholder = if (isId) "Username terdaftar" else "Registered username",
+                    placeholder = if (isJa) "登録ユーザー名" else if (isId) "Username terdaftar" else "Registered username",
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -1263,7 +1286,7 @@ fun ResetPasswordDialog(
                         newPassword = it
                         errorMessage = null
                     },
-                    placeholder = if (isId) "Kata sandi baru (min. 4)" else "New password (min. 4 chars)",
+                    placeholder = if (isJa) "新しいパスワード (4文字以上)" else if (isId) "Kata sandi baru (min. 4)" else "New password (min. 4 chars)",
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Lock,
@@ -1298,7 +1321,7 @@ fun ResetPasswordDialog(
                         confirmPassword = it
                         errorMessage = null
                     },
-                    placeholder = if (isId) "Konfirmasi kata sandi baru" else "Confirm new password",
+                    placeholder = if (isJa) "新しいパスワードの確認" else if (isId) "Konfirmasi kata sandi baru" else "Confirm new password",
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Lock,
@@ -1340,7 +1363,7 @@ fun ResetPasswordDialog(
                         enabled = !isLoading
                     ) {
                         Text(
-                            text = if (isId) "Batal" else "Cancel",
+                            text = if (isJa) "キャンセル" else if (isId) "Batal" else "Cancel",
                             color = Color(0xFF90A4AE),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -1352,15 +1375,15 @@ fun ResetPasswordDialog(
                         onClick = {
                             val cleanUser = resetUsername.trim()
                             if (cleanUser.isBlank()) {
-                                errorMessage = if (isId) "Username tidak boleh kosong" else "Username cannot be empty"
+                                errorMessage = if (isJa) "ユーザー名を入力してください" else if (isId) "Username tidak boleh kosong" else "Username cannot be empty"
                                 return@Button
                             }
                             if (newPassword.length < 4) {
-                                errorMessage = if (isId) "Kata sandi minimal 4 karakter" else "Password must be at least 4 characters"
+                                errorMessage = if (isJa) "パスワードは4文字以上で設定してください" else if (isId) "Kata sandi minimal 4 karakter" else "Password must be at least 4 characters"
                                 return@Button
                             }
                             if (newPassword != confirmPassword) {
-                                errorMessage = if (isId) "Konfirmasi kata sandi tidak cocok" else "Passwords do not match"
+                                errorMessage = if (isJa) "パスワードが一致しません" else if (isId) "Konfirmasi kata sandi tidak cocok" else "Passwords do not match"
                                 return@Button
                             }
                             coroutineScope.launch {
@@ -1372,7 +1395,9 @@ fun ResetPasswordDialog(
                                         onSuccess(cleanUser, newPassword)
                                     }
                                     is AuthResult.Error -> {
-                                        errorMessage = if (isId && result.message.contains("not found", ignoreCase = true)) {
+                                        errorMessage = if (isJa && result.message.contains("not found", ignoreCase = true)) {
+                                            "ユーザー名「$cleanUser」は見つかりませんでした"
+                                        } else if (isId && result.message.contains("not found", ignoreCase = true)) {
                                             "Pengguna '$cleanUser' tidak ditemukan"
                                         } else {
                                             result.message
@@ -1400,7 +1425,7 @@ fun ResetPasswordDialog(
                             )
                         } else {
                             Text(
-                                text = if (isId) "Simpan" else "Reset",
+                                text = if (isJa) "保存する" else if (isId) "Simpan" else "Reset",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Black
                             )

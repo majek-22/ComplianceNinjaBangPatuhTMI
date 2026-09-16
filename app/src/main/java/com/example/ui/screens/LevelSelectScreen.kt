@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -109,7 +110,8 @@ fun LevelSelectScreen(
     onOpenGlossary: () -> Unit,
     onBackToMenu: () -> Unit,
     modifier: Modifier = Modifier,
-    initialDifficulty: GameDifficulty = GameDifficulty.NORMAL
+    initialDifficulty: GameDifficulty = GameDifficulty.NORMAL,
+    currentLanguage: String = "en"
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -154,10 +156,26 @@ fun LevelSelectScreen(
         val prevLevelNum = lvlNum - 1
         val prevBest = userStats?.getBestForLevel(prevLevelNum) ?: 0
         return when (lvlNum) {
-            2 -> context.getString(R.string.level_2_unlock_req) + if (prevBest > 0) " (Skor: $prevBest/1200)" else ""
-            3 -> context.getString(R.string.level_3_unlock_req) + if (prevBest > 0) " (Skor: $prevBest/2500)" else ""
-            4 -> context.getString(R.string.level_boss_unlock_req) + if (prevBest > 0) " (Skor: $prevBest/5000)" else ""
-            else -> context.getString(R.string.level_unlock_requirement, prevLevelNum)
+            2 -> when (currentLanguage.lowercase()) {
+                "ja" -> "セクター1で1,200pt以上必要です" + if (prevBest > 0) " (スコア: $prevBest/1200)" else ""
+                "in", "id" -> "Selesaikan Sektor 1 dengan skor minimal 1.200" + if (prevBest > 0) " (Skor: $prevBest/1200)" else ""
+                else -> "Complete Sector 1 with at least 1,200 points" + if (prevBest > 0) " (Score: $prevBest/1200)" else ""
+            }
+            3 -> when (currentLanguage.lowercase()) {
+                "ja" -> "セクター2で2,500pt以上必要です" + if (prevBest > 0) " (スコア: $prevBest/2500)" else ""
+                "in", "id" -> "Selesaikan Sektor 2 dengan skor minimal 2.500" + if (prevBest > 0) " (Skor: $prevBest/2500)" else ""
+                else -> "Complete Sector 2 with at least 2,500 points" + if (prevBest > 0) " (Score: $prevBest/2500)" else ""
+            }
+            4 -> when (currentLanguage.lowercase()) {
+                "ja" -> "セクター3で5,000pt以上必要です" + if (prevBest > 0) " (スコア: $prevBest/5000)" else ""
+                "in", "id" -> "Selesaikan Sektor 3 dengan skor minimal 5.000" + if (prevBest > 0) " (Skor: $prevBest/5000)" else ""
+                else -> "Complete Sector 3 with at least 5,000 points" + if (prevBest > 0) " (Score: $prevBest/5000)" else ""
+            }
+            else -> when (currentLanguage.lowercase()) {
+                "ja" -> "セクター ${prevLevelNum} をクリアしてアンロック"
+                "in", "id" -> "Selesaikan Misi ${prevLevelNum} untuk membuka"
+                else -> "Complete Mission ${prevLevelNum} to unlock"
+            }
         }
     }
 
@@ -255,6 +273,7 @@ fun LevelSelectScreen(
             // Top Navigation Bar
             CampaignTopBar(
                 totalStars = totalStarsCollected,
+                currentLanguage = currentLanguage,
                 onBack = onBackToMenu,
                 onOpenGlossary = onOpenGlossary
             )
@@ -321,6 +340,7 @@ fun LevelSelectScreen(
                             level = selectedLevel,
                             userStats = userStats,
                             selectedDifficulty = selectedDifficulty,
+                            currentLanguage = currentLanguage,
                             onDifficultyChange = { selectedDifficulty = it },
                             onDeploy = {
                                 val isUnlocked = userStats?.isLevelUnlocked(selectedLevel.levelNumber) ?: (selectedLevel.levelNumber == 1)
@@ -371,6 +391,7 @@ fun LevelSelectScreen(
                         level = selectedLevel,
                         userStats = userStats,
                         selectedDifficulty = selectedDifficulty,
+                        currentLanguage = currentLanguage,
                         onDifficultyChange = { selectedDifficulty = it },
                         onDeploy = {
                             val isUnlocked = userStats?.isLevelUnlocked(selectedLevel.levelNumber) ?: (selectedLevel.levelNumber == 1)
@@ -418,14 +439,16 @@ fun LevelSelectScreen(
     onStartLevel: (LevelConfig) -> Unit,
     onOpenGlossary: () -> Unit,
     onBackToMenu: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentLanguage: String = "en"
 ) {
     LevelSelectScreen(
         userStats = userStats,
         onStartLevel = { lvl, _ -> onStartLevel(lvl) },
         onOpenGlossary = onOpenGlossary,
         onBackToMenu = onBackToMenu,
-        modifier = modifier
+        modifier = modifier,
+        currentLanguage = currentLanguage
     )
 }
 
@@ -435,6 +458,7 @@ fun LevelSelectScreen(
 @Composable
 private fun CampaignTopBar(
     totalStars: Int,
+    currentLanguage: String = "en",
     onBack: () -> Unit,
     onOpenGlossary: () -> Unit
 ) {
@@ -464,14 +488,24 @@ private fun CampaignTopBar(
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column {
+                val titleText = when (currentLanguage.lowercase()) {
+                    "ja" -> "作戦マップ"
+                    "in", "id" -> "Peta Misi"
+                    else -> "Mission Map"
+                }
+                val subtitleText = when (currentLanguage.lowercase()) {
+                    "ja" -> "作戦セクターを選択して出動"
+                    "in", "id" -> "Pilih sektor operasi investigasi"
+                    else -> "Select an operational sector"
+                }
                 Text(
-                    text = stringResource(R.string.level_select_title),
+                    text = titleText,
                     color = TextPrimary,
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Black
                 )
                 Text(
-                    text = stringResource(R.string.level_select_subtitle),
+                    text = subtitleText,
                     color = Color(0xFF90CAF9),
                     fontSize = 11.sp
                 )
@@ -773,6 +807,7 @@ private fun MissionDeploymentConsole(
     level: LevelConfig,
     userStats: UserStats?,
     selectedDifficulty: GameDifficulty,
+    currentLanguage: String = "en",
     onDifficultyChange: (GameDifficulty) -> Unit,
     onDeploy: () -> Unit
 ) {
@@ -804,19 +839,51 @@ private fun MissionDeploymentConsole(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    val sectorBadge = if (isBoss) {
+                        when (currentLanguage.lowercase()) {
+                            "ja" -> "最終セクター"
+                            "in", "id" -> "SEKTOR FINAL"
+                            else -> "FINAL SECTOR"
+                        }
+                    } else {
+                        when (currentLanguage.lowercase()) {
+                            "ja" -> "セクター ${level.levelNumber}"
+                            "in", "id" -> "SEKTOR ${level.levelNumber}"
+                            else -> "SECTOR ${level.levelNumber}"
+                        }
+                    }
                     Text(
-                        text = if (isBoss) {
-                            stringResource(R.string.mission_boss_badge)
-                        } else {
-                            stringResource(R.string.mission_sector_label, level.levelNumber)
-                        },
+                        text = sectorBadge,
                         color = if (isBoss) CoralPrimary else GoldSecondary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
                     )
+                    val levelTitle = when (level.levelNumber) {
+                        1 -> when (currentLanguage.lowercase()) {
+                            "ja" -> "基礎巡回・初期配属"
+                            "in", "id" -> "Dasar & SOP Kerja"
+                            else -> "Basics & SOP"
+                        }
+                        2 -> when (currentLanguage.lowercase()) {
+                            "ja" -> "営業現場の規律"
+                            "in", "id" -> "Integritas Penjualan"
+                            else -> "Sales Integrity"
+                        }
+                        3 -> when (currentLanguage.lowercase()) {
+                            "ja" -> "財務・データ監査"
+                            "in", "id" -> "Kerahasiaan Data"
+                            else -> "Data & Finance"
+                        }
+                        4 -> when (currentLanguage.lowercase()) {
+                            "ja" -> "最終調査 - 総力戦"
+                            "in", "id" -> "Investigasi Puncak"
+                            else -> "Apex Investigation"
+                        }
+                        else -> stringResource(level.nameRes)
+                    }
                     Text(
-                        text = stringResource(level.nameRes),
+                        text = levelTitle,
                         color = Color.White,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
@@ -846,8 +913,13 @@ private fun MissionDeploymentConsole(
                             color = Color(0x22FFC857),
                             border = androidx.compose.foundation.BorderStroke(1.dp, GoldSecondary.copy(alpha = 0.5f))
                         ) {
+                            val recordLabel = when (currentLanguage.lowercase()) {
+                                "ja" -> "記録: $bestScore"
+                                "in", "id" -> "Rekor: $bestScore"
+                                else -> "Best: $bestScore"
+                            }
                             Text(
-                                text = "Rekor: $bestScore",
+                                text = recordLabel,
                                 color = GoldSecondary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Black,
@@ -861,8 +933,31 @@ private fun MissionDeploymentConsole(
             Spacer(modifier = Modifier.height(6.dp))
 
             // Level Description
+            val levelDesc = when (level.levelNumber) {
+                1 -> when (currentLanguage.lowercase()) {
+                    "ja" -> "コンプライアンスの基礎を学び、軽微な違反を迅速に検知してスライスせよ。"
+                    "in", "id" -> "Pelajari dasar kepatuhan etika kerja, tangani pelanggaran SOP ringan dengan cepat."
+                    else -> "Learn workplace compliance basics, identify minor SOP violations quickly."
+                }
+                2 -> when (currentLanguage.lowercase()) {
+                    "ja" -> "不適切な販売手法や誇大広告の不正を暴き、営業倫理を死守せよ。"
+                    "in", "id" -> "Bongkar praktik penjualan curang, manipulasi promosi, dan pertahankan etika."
+                    else -> "Uncover unfair sales practices, promotional manipulation, and uphold ethics."
+                }
+                3 -> when (currentLanguage.lowercase()) {
+                    "ja" -> "情報漏洩や贈賄・不正経費を阻止し、企業の信頼とデータを守り抜け。"
+                    "in", "id" -> "Cegah kebocoran data rahasia, gratifikasi ilegal, dan manipulasi laporan."
+                    else -> "Prevent confidential data leaks, illegal kickbacks, and financial fraud."
+                }
+                4 -> when (currentLanguage.lowercase()) {
+                    "ja" -> "あらゆる重大違反が高速で襲来する！最高峰のコンプライアンス防衛戦！"
+                    "in", "id" -> "Semua pelanggaran berat muncul berkecepatan tinggi! Ujian pamungkas kepatuhan!"
+                    else -> "High-speed barrage of all critical violations! The ultimate integrity test!"
+                }
+                else -> stringResource(level.descRes)
+            }
             Text(
-                text = stringResource(level.descRes),
+                text = levelDesc,
                 color = Color(0xFFB0BEC5),
                 fontSize = 11.sp,
                 lineHeight = 15.sp,
@@ -877,8 +972,13 @@ private fun MissionDeploymentConsole(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val targetsLabel = when (currentLanguage.lowercase()) {
+                    "ja" -> "対象となる違反行為:"
+                    "in", "id" -> "Target Ancaman:"
+                    else -> "Target Violations:"
+                }
                 Text(
-                    text = stringResource(R.string.mission_targets_label) + ":",
+                    text = targetsLabel,
                     color = Color(0xFF90CAF9),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
@@ -913,8 +1013,13 @@ private fun MissionDeploymentConsole(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val diffLabelText = when (currentLanguage.lowercase()) {
+                    "ja" -> "難易度:"
+                    "in", "id" -> "Tingkat Kesulitan:"
+                    else -> "Difficulty:"
+                }
                 Text(
-                    text = stringResource(R.string.difficulty_label),
+                    text = diffLabelText,
                     color = Color(0xFFCFD8DC),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
@@ -936,8 +1041,20 @@ private fun MissionDeploymentConsole(
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
+                        val diffText = when (diff) {
+                            GameDifficulty.NORMAL -> when (currentLanguage.lowercase()) {
+                                "ja" -> "ノーマル"
+                                "in", "id" -> "Normal"
+                                else -> "Normal"
+                            }
+                            GameDifficulty.HARD -> when (currentLanguage.lowercase()) {
+                                "ja" -> "ハード (1.25倍)"
+                                "in", "id" -> "Sulit (1.25x)"
+                                else -> "Hard (1.25x)"
+                            }
+                        }
                         Text(
-                            text = if (diff == GameDifficulty.NORMAL) "Normal" else "Hard (1.25x)",
+                            text = diffText,
                             color = if (isSelected) diffColor else Color(0xFFB0BEC5),
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
@@ -969,8 +1086,13 @@ private fun MissionDeploymentConsole(
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
+                    val startText = when (currentLanguage.lowercase()) {
+                        "ja" -> "スタート"
+                        "in", "id" -> "MULAI"
+                        else -> "START"
+                    }
                     Text(
-                        text = "START",
+                        text = startText,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
@@ -1004,10 +1126,26 @@ private fun MissionDeploymentConsole(
                             else -> 0
                         }
                         val reqText = when (level.levelNumber) {
-                            2 -> stringResource(R.string.level_2_unlock_req)
-                            3 -> stringResource(R.string.level_3_unlock_req)
-                            4 -> stringResource(R.string.level_boss_unlock_req)
-                            else -> stringResource(R.string.level_unlock_requirement, prevLevelNum)
+                            2 -> when (currentLanguage.lowercase()) {
+                                "ja" -> "アンロック条件: セクター1で1,200pt以上"
+                                "in", "id" -> "Selesaikan Sektor 1 dengan skor minimal 1.200"
+                                else -> "Complete Sector 1 with at least 1,200 points"
+                            }
+                            3 -> when (currentLanguage.lowercase()) {
+                                "ja" -> "アンロック条件: セクター2で2,500pt以上"
+                                "in", "id" -> "Selesaikan Sektor 2 dengan skor minimal 2.500"
+                                else -> "Complete Sector 2 with at least 2,500 points"
+                            }
+                            4 -> when (currentLanguage.lowercase()) {
+                                "ja" -> "アンロック条件: セクター3で5,000pt以上"
+                                "in", "id" -> "Selesaikan Sektor 3 dengan skor minimal 5.000"
+                                else -> "Complete Sector 3 with at least 5,000 points"
+                            }
+                            else -> when (currentLanguage.lowercase()) {
+                                "ja" -> "セクター ${prevLevelNum} をクリアしてアンロック"
+                                "in", "id" -> "Selesaikan Misi ${prevLevelNum} untuk membuka"
+                                else -> "Complete Mission ${prevLevelNum} to unlock"
+                            }
                         }
                         Column {
                             Text(
@@ -1018,8 +1156,13 @@ private fun MissionDeploymentConsole(
                             )
                             if (targetScore > 0) {
                                 Spacer(modifier = Modifier.height(2.dp))
+                                val progressLabel = when (currentLanguage.lowercase()) {
+                                    "ja" -> "進捗: $prevBest / $targetScore pt"
+                                    "in", "id" -> "Progres: $prevBest / $targetScore poin"
+                                    else -> "Progress: $prevBest / $targetScore pts"
+                                }
                                 Text(
-                                    text = "Progres: $prevBest / $targetScore poin",
+                                    text = progressLabel,
                                     color = GoldSecondary,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold

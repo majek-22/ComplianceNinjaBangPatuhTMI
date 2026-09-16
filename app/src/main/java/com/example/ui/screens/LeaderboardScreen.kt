@@ -213,7 +213,7 @@ fun LeaderboardScreen(
                     isOffline = isOffline,
                     isLoading = isLoading,
                     errorMessage = errorMessage,
-                    isId = isId,
+                    currentLanguage = currentLanguage,
                     onRefresh = onRefresh
                 )
             } else {
@@ -222,7 +222,8 @@ fun LeaderboardScreen(
                     currentUser = currentUser,
                     userStats = userStats,
                     leaderboardEntries = leaderboardEntries,
-                    recentSessions = recentSessions
+                    recentSessions = recentSessions,
+                    currentLanguage = currentLanguage
                 )
             }
         }
@@ -236,9 +237,11 @@ private fun GlobalLeaderboardTab(
     isOffline: Boolean,
     isLoading: Boolean,
     errorMessage: String? = null,
-    isId: Boolean = false,
+    currentLanguage: String = "en",
     onRefresh: () -> Unit = {}
 ) {
+    val isId = currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true)
+    val isJa = currentLanguage.equals("ja", ignoreCase = true)
     val isServerOffline = isOffline || !errorMessage.isNullOrBlank()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -263,7 +266,7 @@ private fun GlobalLeaderboardTab(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Server Offline",
+                            text = if (isJa) "サーバーオフライン" else "Server Offline",
                             color = Color(0xFFFF8A80),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -287,7 +290,8 @@ private fun GlobalLeaderboardTab(
                         text = if (entries.isNotEmpty()) {
                             stringResource(R.string.leaderboard_offline_banner)
                         } else {
-                            if (isId) "Tidak dapat terhubung ke server Firebase. Menampilkan data lokal."
+                            if (isJa) "Firebaseサーバーに接続できません。ローカルデータを表示しています。"
+                            else if (isId) "Tidak dapat terhubung ke server Firebase. Menampilkan data lokal."
                             else "Unable to connect to Firebase server. Showing local data."
                         },
                         color = Color(0xFFFFCCBC),
@@ -331,14 +335,15 @@ private fun GlobalLeaderboardTab(
                         }
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Server Offline",
+                            text = if (isJa) "サーバーオフライン" else "Server Offline",
                             color = Color(0xFFFF8A80),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Black
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = if (isId) "Tidak dapat terhubung ke server Firebase.\nSilakan periksa koneksi internet dan coba lagi."
+                            text = if (isJa) "Firebaseサーバーに接続できません。\nインターネット接続を確認して再試行してください。"
+                            else if (isId) "Tidak dapat terhubung ke server Firebase.\nSilakan periksa koneksi internet dan coba lagi."
                             else "Unable to connect to Firebase server.\nPlease check your internet connection and try again.",
                             color = Color(0xFFB0BEC5),
                             fontSize = 13.sp,
@@ -358,7 +363,7 @@ private fun GlobalLeaderboardTab(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isId) "COBA LAGI" else "RETRY",
+                                text = if (isJa) "再試行" else if (isId) "COBA LAGI" else "RETRY",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
@@ -382,7 +387,7 @@ private fun GlobalLeaderboardTab(
             ) {
                 items(entries) { item ->
                     val isSelf = currentUser != null && item.username.equals(currentUser, ignoreCase = true)
-                    LeaderboardRow(item = item, isSelf = isSelf)
+                    LeaderboardRow(item = item, isSelf = isSelf, currentLanguage = currentLanguage)
                 }
             }
         }
@@ -390,7 +395,7 @@ private fun GlobalLeaderboardTab(
 }
 
 @Composable
-private fun LeaderboardRow(item: LeaderboardItem, isSelf: Boolean) {
+private fun LeaderboardRow(item: LeaderboardItem, isSelf: Boolean, currentLanguage: String = "en") {
     val rankBadgeColor = when (item.rank) {
         1 -> Color(0xFFFFD54F) // Gold
         2 -> Color(0xFFCFD8DC) // Silver
@@ -453,8 +458,28 @@ private fun LeaderboardRow(item: LeaderboardItem, isSelf: Boolean) {
                         }
                     }
                 }
+                val diffLocalized = when (currentLanguage.lowercase()) {
+                    "ja" -> when {
+                        item.difficulty.contains("auto", ignoreCase = true) -> "自動"
+                        item.difficulty.contains("hard", ignoreCase = true) -> "ハード"
+                        item.difficulty.contains("normal", ignoreCase = true) -> "ノーマル"
+                        else -> item.difficulty
+                    }
+                    "in", "id" -> when {
+                        item.difficulty.contains("auto", ignoreCase = true) -> "Otomatis"
+                        item.difficulty.contains("hard", ignoreCase = true) -> "Sulit"
+                        item.difficulty.contains("normal", ignoreCase = true) -> "Normal"
+                        else -> item.difficulty
+                    }
+                    else -> item.difficulty
+                }
+                val levelLabel = when (currentLanguage.lowercase()) {
+                    "ja" -> "レベル ${item.bestScoreLevel} • $diffLocalized"
+                    "in", "id" -> "Level ${item.bestScoreLevel} • $diffLocalized"
+                    else -> "Lvl ${item.bestScoreLevel} • $diffLocalized"
+                }
                 Text(
-                    text = "Lvl ${item.bestScoreLevel} • ${item.difficulty}",
+                    text = levelLabel,
                     color = Color(0xFF90CAF9),
                     fontSize = 11.sp
                 )
@@ -476,7 +501,8 @@ private fun MyStatsTab(
     currentUser: String?,
     userStats: UserStats?,
     leaderboardEntries: List<LeaderboardItem>,
-    recentSessions: List<GameSessionRecord> = emptyList()
+    recentSessions: List<GameSessionRecord> = emptyList(),
+    currentLanguage: String = "en"
 ) {
     val stats = userStats ?: UserStats(username = currentUser ?: "Officer")
     val userRank = leaderboardEntries.find { it.username.equals(currentUser, ignoreCase = true) }?.rank
@@ -556,8 +582,28 @@ private fun MyStatsTab(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    val statsDiffLocalized = when (currentLanguage.lowercase()) {
+                        "ja" -> when {
+                            stats.bestScoreDifficulty.contains("auto", ignoreCase = true) -> "自動"
+                            stats.bestScoreDifficulty.contains("hard", ignoreCase = true) -> "ハード"
+                            stats.bestScoreDifficulty.contains("normal", ignoreCase = true) -> "ノーマル"
+                            else -> stats.bestScoreDifficulty
+                        }
+                        "in", "id" -> when {
+                            stats.bestScoreDifficulty.contains("auto", ignoreCase = true) -> "Otomatis"
+                            stats.bestScoreDifficulty.contains("hard", ignoreCase = true) -> "Sulit"
+                            stats.bestScoreDifficulty.contains("normal", ignoreCase = true) -> "Normal"
+                            else -> stats.bestScoreDifficulty
+                        }
+                        else -> stats.bestScoreDifficulty
+                    }
+                    val achievedText = when (currentLanguage.lowercase()) {
+                        "ja" -> "レベル ${stats.bestScoreLevel} (${statsDiffLocalized}) で達成"
+                        "in", "id" -> "Dicapai pada Level ${stats.bestScoreLevel} (${statsDiffLocalized})"
+                        else -> "Achieved on Level ${stats.bestScoreLevel} (${statsDiffLocalized})"
+                    }
                     Text(
-                        text = "Achieved on Level ${stats.bestScoreLevel} (${stats.bestScoreDifficulty})",
+                        text = achievedText,
                         color = Color(0xFF90CAF9),
                         fontSize = 11.sp
                     )

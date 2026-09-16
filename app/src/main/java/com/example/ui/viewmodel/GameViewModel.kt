@@ -413,15 +413,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // LANGUAGE & AUDIO CONTROLS
     // =========================================================================
 
-    fun toggleLanguage(onLanguageChanged: (() -> Unit)? = null) {
-        val current = _uiState.value.currentLanguage
-        val next = if (current == "in") "en" else "in"
+    fun setLanguage(lang: String, onLanguageChanged: (() -> Unit)? = null) {
         viewModelScope.launch {
-            sessionManager.setLanguage(next)
-            LocaleManager.setLocale(next)
-            _uiState.value = _uiState.value.copy(currentLanguage = next)
+            sessionManager.setLanguage(lang)
+            LocaleManager.setLocale(lang)
+            _uiState.value = _uiState.value.copy(currentLanguage = lang)
             onLanguageChanged?.invoke()
         }
+    }
+
+    fun toggleLanguage(onLanguageChanged: (() -> Unit)? = null) {
+        val current = _uiState.value.currentLanguage
+        val next = when (current) {
+            "in", "id" -> "en"
+            "en" -> "ja"
+            else -> "in"
+        }
+        setLanguage(next, onLanguageChanged)
     }
 
     fun toggleAudioMute() {

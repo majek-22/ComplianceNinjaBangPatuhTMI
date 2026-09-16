@@ -86,6 +86,9 @@
     <string name="chatbot_loading">Menghubungkan ke Asisten Kepatuhan...</string>
     <string name="chatbot_error_title">Gagal Menghubungkan</string>
     <string name="chatbot_error_retry">Coba Lagi</string>
+    <string name="menu_ai_assistant">Asisten AI</string>
+    <string name="gameplay_ready">Bersiap...</string>
+    <string name="gameplay_game_over">PERMAINAN SELESAI</string>
     <string name="hud_score_label">SKOR</string>
     <string name="hud_timer_label">WAKTU</string>
     <string name="dialog_paused_title">JEDA</string>
@@ -381,7 +384,7 @@
     <string name="mission_targets_label">Target Ancaman</string>
     <string name="mission_star_thresholds">Target Bintang</string>
     <string name="mission_total_stars">Bintang</string>
-    <string name="mission_tap_to_deploy">START</string>
+    <string name="mission_tap_to_deploy">MULAI</string>
     <string name="mission_select_prompt">Pilih sektor operasi investigasi</string>
 
     <!-- Comic Strings -->

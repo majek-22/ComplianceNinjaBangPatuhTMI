@@ -149,6 +149,10 @@ fun ComplianceSlicerApp(
         }
     }
 
+    val onSelectLanguage: (String) -> Unit = { lang ->
+        viewModel.setLanguage(lang) { activity?.recreate() }
+    }
+
     Crossfade(
         targetState = uiState.phase,
         animationSpec = tween(300),
@@ -171,7 +175,8 @@ fun ComplianceSlicerApp(
                     onLogin = { u, p -> viewModel.login(u, p) },
                     onRegister = { u, p -> viewModel.register(u, p) },
                     onResetPassword = { u, p -> viewModel.resetPassword(u, p) },
-                    onToggleLanguage = { viewModel.toggleLanguage { activity?.recreate() } },
+                    onToggleLanguage = {},
+                    onSelectLanguage = onSelectLanguage,
                     onToggleAudioMute = { viewModel.toggleAudioMute() }
                 )
             }
@@ -189,7 +194,8 @@ fun ComplianceSlicerApp(
                     onOpenLeaderboard = { viewModel.navigateTo(GamePhase.LEADERBOARD) },
                     onOpenGlossary = { viewModel.navigateTo(GamePhase.GLOSSARY) },
                     onOpenProfile = { viewModel.navigateTo(GamePhase.PROFILE) },
-                    onToggleLanguage = { viewModel.toggleLanguage { activity?.recreate() } },
+                    onToggleLanguage = {},
+                    onSelectLanguage = onSelectLanguage,
                     onToggleAudioMute = { viewModel.toggleAudioMute() },
                     onLogout = { viewModel.logout() },
                     onPauseMusic = {
@@ -208,14 +214,14 @@ fun ComplianceSlicerApp(
                     userStats = uiState.userStats,
                     onStartLevel = { level, diff -> viewModel.startMission(level, diff) },
                     onOpenGlossary = { viewModel.openGlossary() },
-                    onBackToMenu = { viewModel.navigateTo(GamePhase.MENU) }
+                    onBackToMenu = { viewModel.navigateTo(GamePhase.MENU) },
+                    currentLanguage = uiState.currentLanguage
                 )
             }
 
             GamePhase.GLOSSARY -> {
                 IconGlossaryScreen(
                     currentLanguage = uiState.currentLanguage,
-                    onToggleLanguage = { viewModel.toggleLanguage { activity?.recreate() } },
                     onBack = { viewModel.closeGlossary() }
                 )
             }
@@ -275,7 +281,6 @@ fun ComplianceSlicerApp(
                     slicedSummary = uiState.slicedCategoriesSummary,
                     elapsedSeconds = uiState.timeRemaining,
                     currentLanguage = uiState.currentLanguage,
-                    onToggleLanguage = { viewModel.toggleLanguage { activity?.recreate() } },
                     onOpenRules = { viewModel.openGlossary() },
                     onPlayAgain = { viewModel.startMission(uiState.selectedLevel) },
                     onSelectLevel = { viewModel.navigateTo(GamePhase.LEVEL_SELECT) },

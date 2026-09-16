@@ -54,5 +54,16 @@ class ComplianceApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         ensureFirebaseInitialized(this)
+        initWebViewCacheDirectories()
+    }
+
+    private fun initWebViewCacheDirectories() {
+        try {
+            val codeCacheDir = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache")
+            java.io.File(codeCacheDir, "wasm").mkdirs()
+            java.io.File(codeCacheDir, "js").mkdirs()
+        } catch (e: Exception) {
+            Log.w(TAG, "WebView cache directory preparation note: ${e.message}")
+        }
     }
 }

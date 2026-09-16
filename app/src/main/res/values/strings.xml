@@ -86,6 +86,9 @@
     <string name="chatbot_loading">Connecting to Compliance Assistant...</string>
     <string name="chatbot_error_title">Connection Error</string>
     <string name="chatbot_error_retry">Retry Connection</string>
+    <string name="menu_ai_assistant">AI Assistant</string>
+    <string name="gameplay_ready">Ready...</string>
+    <string name="gameplay_game_over">GAME OVER</string>
     <string name="hud_score_label">SCORE</string>
     <string name="hud_timer_label">TIME</string>
     <string name="dialog_paused_title">PAUSED</string>

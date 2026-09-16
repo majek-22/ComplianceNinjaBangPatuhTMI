@@ -63,6 +63,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.ui.components.LanguageDropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -124,6 +125,7 @@ fun MainMenuScreen(
     onOpenGlossary: () -> Unit,
     onOpenProfile: () -> Unit = {},
     onToggleLanguage: () -> Unit,
+    onSelectLanguage: ((String) -> Unit)? = null,
     onToggleAudioMute: () -> Unit,
     onLogout: () -> Unit,
     onPauseMusic: () -> Unit = {},
@@ -185,6 +187,7 @@ fun MainMenuScreen(
                 onOpenLeaderboard = onOpenLeaderboard,
                 onOpenGlossary = onOpenGlossary,
                 onToggleLanguage = onToggleLanguage,
+                onSelectLanguage = onSelectLanguage,
                 onToggleAudioMute = onToggleAudioMute,
                 onLogout = onLogout
             )
@@ -386,8 +389,13 @@ fun MainMenuScreen(
                             .clip(CircleShape)
                             .background(Color(0xFF00E676))
                     )
+                    val aiAssistantLabel = when (currentLanguage.lowercase()) {
+                        "ja" -> "AIアシスタント"
+                        "in", "id" -> "Asisten AI"
+                        else -> stringResource(R.string.menu_ai_assistant)
+                    }
                     Text(
-                        text = "AI Assistant",
+                        text = aiAssistantLabel,
                         color = Color(0xFFE0F7FA),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -496,6 +504,7 @@ private fun MainMenuTopBar(
     onOpenLeaderboard: () -> Unit,
     onOpenGlossary: () -> Unit,
     onToggleLanguage: () -> Unit,
+    onSelectLanguage: ((String) -> Unit)? = null,
     onToggleAudioMute: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -679,6 +688,7 @@ private fun MainMenuTopBar(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val langInteraction = remember { MutableInteractionSource() }
+                    var showLanguageMenu by remember { mutableStateOf(false) }
                     // Language Switcher
                     Box(
                         modifier = Modifier
@@ -688,7 +698,10 @@ private fun MainMenuTopBar(
                             .clickable(
                                 interactionSource = langInteraction,
                                 indication = null,
-                                onClick = onToggleLanguage
+                                onClick = {
+                                    showLanguageMenu = true
+                                    onToggleLanguage()
+                                }
                             )
                             .padding(horizontal = 7.dp)
                             .testTag("menu_lang_btn"),
@@ -708,13 +721,29 @@ private fun MainMenuTopBar(
                                     fontSize = 11.sp
                                 )
                                 Text(
-                                    text = if (lang == "in" || lang == "id") "ID" else "EN",
+                                    text = when (lang.lowercase()) {
+                                        "ja" -> "JA"
+                                        "in", "id" -> "ID"
+                                        else -> "EN"
+                                    },
                                     color = GoldSecondary,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Black
                                 )
                             }
                         }
+
+                        LanguageDropdownMenu(
+                            expanded = showLanguageMenu,
+                            currentLanguage = currentLanguage,
+                            onDismissRequest = { showLanguageMenu = false },
+                            onLanguageSelected = { selectedLang ->
+                                showLanguageMenu = false
+                                if (onSelectLanguage != null) {
+                                    onSelectLanguage(selectedLang)
+                                }
+                            }
+                        )
                     }
 
                     // Tactical Vertical Hairline Divider

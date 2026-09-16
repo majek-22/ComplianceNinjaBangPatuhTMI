@@ -1,7 +1,6 @@
 package com.example.ui.screens
 
 import android.app.Activity
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -46,7 +45,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,6 +91,7 @@ fun ResultScreen(
     elapsedSeconds: Float = 0f,
     currentLanguage: String = "en",
     onToggleLanguage: () -> Unit = {},
+    onSelectLanguage: ((String) -> Unit)? = null,
     onOpenRules: () -> Unit = {},
     onPlayAgain: () -> Unit,
     onSelectLevel: () -> Unit,
@@ -112,18 +114,19 @@ fun ResultScreen(
     }
 
     val isIndonesian = currentLanguage == "in" || currentLanguage == "id"
+    val isJa = currentLanguage.equals("ja", ignoreCase = true)
     val secondsInt = elapsedSeconds.toInt().coerceAtLeast(0)
     val minutes = secondsInt / 60
     val secs = secondsInt % 60
     val timeSurvivedFormatted = String.format("%02d:%02d", minutes, secs)
 
     val rankName = when (rankRes) {
-        R.string.rank_intern -> if (isIndonesian) "Magang Kepatuhan" else "Compliance Intern"
-        R.string.rank_auditor -> if (isIndonesian) "Auditor Muda" else "Junior Auditor"
-        R.string.rank_officer -> if (isIndonesian) "Petugas Kepatuhan" else "Compliance Officer"
-        R.string.rank_senior_officer -> if (isIndonesian) "Petugas Kepatuhan Senior" else "Senior Compliance Officer"
-        R.string.rank_risk_lead -> if (isIndonesian) "Ketua Manajemen Risiko" else "Senior Risk Lead"
-        R.string.rank_director -> if (isIndonesian) "Direktur Kepatuhan Utama" else "Chief Compliance Director"
+        R.string.rank_intern -> if (isJa) "コンプライアンス実習生" else if (isIndonesian) "Magang Kepatuhan" else "Compliance Intern"
+        R.string.rank_auditor -> if (isJa) "ジュニア監査役" else if (isIndonesian) "Auditor Muda" else "Junior Auditor"
+        R.string.rank_officer -> if (isJa) "コンプライアンス担当官" else if (isIndonesian) "Petugas Kepatuhan" else "Compliance Officer"
+        R.string.rank_senior_officer -> if (isJa) "シニア・コンプライアンス担当官" else if (isIndonesian) "Petugas Kepatuhan Senior" else "Senior Compliance Officer"
+        R.string.rank_risk_lead -> if (isJa) "統括リスクリーダー" else if (isIndonesian) "Ketua Manajemen Risiko" else "Senior Risk Lead"
+        R.string.rank_director -> if (isJa) "最高コンプライアンス責任者 (CCO)" else if (isIndonesian) "Direktur Kepatuhan Utama" else "Chief Compliance Director"
         else -> stringResource(rankRes)
     }.uppercase()
 
@@ -196,8 +199,13 @@ fun ResultScreen(
                         color = Color(0x3300E5FF),
                         border = BorderStroke(1.dp, Color(0x6600E5FF))
                     ) {
+                        val survivedLabel = when (currentLanguage.lowercase()) {
+                            "ja" -> "生存時間: $timeSurvivedFormatted"
+                            "in", "id" -> "BERTAHAN: $timeSurvivedFormatted"
+                            else -> "SURVIVED: $timeSurvivedFormatted"
+                        }
                         Text(
-                            text = if (isIndonesian) "WAKTU: $timeSurvivedFormatted" else "SURVIVED: $timeSurvivedFormatted",
+                            text = survivedLabel,
                             color = Color(0xFF80D8FF),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -273,56 +281,25 @@ fun ResultScreen(
                     )
                 }
 
-                // Right: Language toggle and Exit (X) circle button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                // Right: Exit (X) circle button
+                Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 4.dp)
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x66000000))
+                        .border(1.2.dp, Color(0x55FFFFFF), CircleShape)
+                        .clickable(onClick = onReturnToMenu)
+                        .testTag("return_menu_button"),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Language toggle
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x55000000))
-                            .border(1.2.dp, GoldSecondary.copy(alpha = 0.7f), CircleShape)
-                            .clickable(onClick = onToggleLanguage),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Crossfade(
-                            targetState = currentLanguage,
-                            animationSpec = tween(200),
-                            label = "result_lang_crossfade"
-                        ) { lang ->
-                            Text(
-                                text = if (lang == "in" || lang == "id") "ID" else "EN",
-                                color = GoldSecondary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                        }
-                    }
-
-                    // Exit / Close button (X)
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x66000000))
-                            .border(1.2.dp, Color(0x55FFFFFF), CircleShape)
-                            .clickable(onClick = onReturnToMenu)
-                            .testTag("return_menu_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Return to Menu",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Return to Menu",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
 
@@ -451,8 +428,13 @@ fun ResultScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
+                    val menuButtonLabel = when (currentLanguage.lowercase()) {
+                        "ja" -> "メインメニュー"
+                        "in", "id" -> "MENU UTAMA"
+                        else -> "MAIN MENU"
+                    }
                     Text(
-                        text = if (isIndonesian) "MENU" else "MENU",
+                        text = menuButtonLabel,
                         color = Color(0xFF90CAF9),
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
@@ -499,8 +481,13 @@ fun ResultScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
+                            val playAgainLabel = when (currentLanguage.lowercase()) {
+                                "ja" -> "もう一度プレイ"
+                                "in", "id" -> "MAIN LAGI"
+                                else -> "PLAY AGAIN"
+                            }
                             Text(
-                                text = if (isIndonesian) "MAIN LAGI" else "PLAY AGAIN",
+                                text = playAgainLabel,
                                 color = Color.White,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Black,
@@ -600,8 +587,13 @@ private fun ShiftRecapCard(
                     color = Color(0x55000000),
                     border = BorderStroke(1.dp, GoldSecondary.copy(alpha = 0.7f))
                 ) {
+                    val countSuffix = when {
+                        currentLanguage.lowercase() == "ja" -> "回阻止"
+                        isId -> "ditebas"
+                        else -> "sliced"
+                    }
                     Text(
-                        text = "×$count ${if (isId) "ditebas" else "sliced"}",
+                        text = "×$count $countSuffix",
                         color = GoldSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,

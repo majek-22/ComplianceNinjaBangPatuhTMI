@@ -5,7 +5,11 @@ import androidx.core.os.LocaleListCompat
 
 object LocaleManager {
     fun setLocale(languageTag: String) {
-        val tags = if (languageTag == "in" || languageTag == "id") "in,id" else "en"
+        val tags = when (languageTag.lowercase()) {
+            "ja", "japanese" -> "ja"
+            "in", "id", "indonesian" -> "in,id"
+            else -> "en"
+        }
         val appLocale = LocaleListCompat.forLanguageTags(tags)
         AppCompatDelegate.setApplicationLocales(appLocale)
     }
@@ -13,8 +17,12 @@ object LocaleManager {
     fun getCurrentLocaleTag(): String {
         val locales = AppCompatDelegate.getApplicationLocales()
         return if (!locales.isEmpty) {
-            val primary = locales.get(0)?.language ?: "en"
-            if (primary == "in" || primary == "id") "in" else "en"
+            val primary = locales.get(0)?.language?.lowercase() ?: "en"
+            when (primary) {
+                "ja" -> "ja"
+                "in", "id" -> "in"
+                else -> "en"
+            }
         } else {
             "en"
         }

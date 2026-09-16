@@ -465,12 +465,17 @@ fun GameScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val isIndonesian = uiState.currentLanguage == "in" || uiState.currentLanguage == "id"
+                    val isJapanese = uiState.currentLanguage == "ja"
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = if (isIndonesian) "❄️ BONUS BEKU! ❄️" else "❄️ FREEZE BONUS! ❄️",
+                            text = when {
+                                isJapanese -> "❄️ フリーズボーナス！ ❄️"
+                                isIndonesian -> "❄️ BONUS BEKU! ❄️"
+                                else -> "❄️ FREEZE BONUS! ❄️"
+                            },
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFF00E5FF)
@@ -492,10 +497,10 @@ fun GameScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(3.dp))
-                    val corruptorBonusText = if (isIndonesian) {
-                        "Tebas Corruptor Bebas! ${uiState.freezeBonusHits} Tebasan (+${uiState.freezeBonusHits * 10} Poin)"
-                    } else {
-                        "Slash Corruptor Freely! ${uiState.freezeBonusHits} Slashes (+${uiState.freezeBonusHits * 10} Points)"
+                    val corruptorBonusText = when {
+                        isJapanese -> "腐敗者を連撃せよ！ ${uiState.freezeBonusHits} 回連撃 (+${uiState.freezeBonusHits * 10} 点)"
+                        isIndonesian -> "Tebas Corruptor Bebas! ${uiState.freezeBonusHits} Tebasan (+${uiState.freezeBonusHits * 10} Poin)"
+                        else -> "Slash Corruptor Freely! ${uiState.freezeBonusHits} Slashes (+${uiState.freezeBonusHits * 10} Points)"
                     }
                     Text(
                         text = corruptorBonusText,
@@ -629,8 +634,13 @@ fun GameScreen(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier.scale(readyScale)
                 ) {
+                    val readyText = when (uiState.currentLanguage.lowercase()) {
+                        "ja" -> "準備..."
+                        "in", "id" -> "Bersiap..."
+                        else -> stringResource(R.string.gameplay_ready)
+                    }
                     Text(
-                        text = "Ready...",
+                        text = readyText,
                         color = Color(0xFFFF9800), // Orange
                         fontSize = 48.sp,
                         fontWeight = FontWeight.Black,
@@ -687,12 +697,18 @@ fun GameScreen(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier.scale(goScale)
                 ) {
+                    val gameOverText = when (uiState.currentLanguage.lowercase()) {
+                        "ja" -> "ゲームオーバー"
+                        "in", "id" -> "PERMAINAN SELESAI"
+                        else -> stringResource(R.string.gameplay_game_over)
+                    }
                     Text(
-                        text = "GAME OVER",
+                        text = gameOverText,
                         color = Color(0xFFFF2A2A), // Bold Red
-                        fontSize = 52.sp,
+                        fontSize = if (uiState.currentLanguage.lowercase() in listOf("in", "id")) 38.sp else 52.sp,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 3.sp,
+                        letterSpacing = if (uiState.currentLanguage.lowercase() in listOf("in", "id")) 1.sp else 3.sp,
+                        textAlign = TextAlign.Center,
                         style = androidx.compose.ui.text.TextStyle(
                             shadow = androidx.compose.ui.graphics.Shadow(
                                 color = Color(0xFF000000),
