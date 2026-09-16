@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -80,10 +82,12 @@ fun LeaderboardScreen(
     errorMessage: String? = null,
     recentSessions: List<GameSessionRecord> = emptyList(),
     initialTab: Int = 0,
+    currentLanguage: String = "en",
     onRefresh: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isId = currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true)
     var selectedTab by remember(initialTab) { mutableIntStateOf(initialTab) } // 0 = Global Top 100, 1 = My Stats
 
     val bgGradient = Brush.verticalGradient(
@@ -208,7 +212,9 @@ fun LeaderboardScreen(
                     currentUser = currentUser,
                     isOffline = isOffline,
                     isLoading = isLoading,
-                    errorMessage = errorMessage
+                    errorMessage = errorMessage,
+                    isId = isId,
+                    onRefresh = onRefresh
                 )
             } else {
                 // MY STATS TAB
@@ -229,43 +235,65 @@ private fun GlobalLeaderboardTab(
     currentUser: String?,
     isOffline: Boolean,
     isLoading: Boolean,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    isId: Boolean = false,
+    onRefresh: () -> Unit = {}
 ) {
+    val isServerOffline = isOffline || !errorMessage.isNullOrBlank()
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // Offline Banner
-        if (isOffline) {
+        // Offline Banner (Server Offline)
+        if (isServerOffline) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0x33FF7043))
-                    .border(1.dp, Color(0x66FF7043), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x33FF5252))
+                    .border(1.dp, Color(0x66FF5252), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.CloudOff,
                     contentDescription = null,
-                    tint = Color(0xFFFF7043),
-                    modifier = Modifier.size(18.dp)
+                    tint = Color(0xFFFF5252),
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.leaderboard_offline_banner),
-                        color = Color(0xFFFFCCBC),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    if (!errorMessage.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Info: $errorMessage",
-                            color = Color(0xFFFFAB91),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Normal
+                            text = "Server Offline",
+                            color = Color(0xFFFF8A80),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0x33FF5252)
+                        ) {
+                            Text(
+                                text = "DISCONNECT",
+                                color = Color(0xFFFF8A80),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (entries.isNotEmpty()) {
+                            stringResource(R.string.leaderboard_offline_banner)
+                        } else {
+                            if (isId) "Tidak dapat terhubung ke server Firebase. Menampilkan data lokal."
+                            else "Unable to connect to Firebase server. Showing local data."
+                        },
+                        color = Color(0xFFFFCCBC),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Normal
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -280,6 +308,63 @@ private fun GlobalLeaderboardTab(
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(color = Color(0xFFFFD54F))
+                } else if (isServerOffline) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x22FF5252))
+                                .border(1.5.dp, Color(0x66FF5252), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudOff,
+                                contentDescription = null,
+                                tint = Color(0xFFFF5252),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "Server Offline",
+                            color = Color(0xFFFF8A80),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if (isId) "Tidak dapat terhubung ke server Firebase.\nSilakan periksa koneksi internet dan coba lagi."
+                            else "Unable to connect to Firebase server.\nPlease check your internet connection and try again.",
+                            color = Color(0xFFB0BEC5),
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onRefresh,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isId) "COBA LAGI" else "RETRY",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
                 } else {
                     Text(
                         text = stringResource(R.string.leaderboard_empty),

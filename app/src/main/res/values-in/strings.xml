@@ -239,8 +239,9 @@
     <string name="leaderboard_score_header">SKOR</string>
     <string name="leaderboard_level_header">LEVEL</string>
     <string name="leaderboard_diff_header">MODE</string>
-    <string name="leaderboard_offline_notice">Offline — Menampilkan hasil tersimpan</string>
-    <string name="leaderboard_offline_banner">Offline — Menampilkan hasil tersimpan</string>
+    <string name="leaderboard_server_offline">Server Offline</string>
+    <string name="leaderboard_offline_notice">Server Offline — Menampilkan hasil tersimpan</string>
+    <string name="leaderboard_offline_banner">Server Offline — Menampilkan hasil tersimpan</string>
     <string name="leaderboard_refresh">SEGARKAN</string>
     <string name="leaderboard_empty">Belum ada peringkat tercatat. Jadilah yang pertama bermain!</string>
     <string name="stats_overall_best">Skor Terbaik Pribadi</string>

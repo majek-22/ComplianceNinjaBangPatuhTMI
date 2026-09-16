@@ -230,6 +230,7 @@ fun ComplianceSlicerApp(
                     isLoading = uiState.isLeaderboardLoading,
                     errorMessage = uiState.leaderboardErrorMessage,
                     initialTab = 0,
+                    currentLanguage = uiState.currentLanguage,
                     onRefresh = { viewModel.refreshLeaderboard() },
                     onBack = { viewModel.navigateTo(GamePhase.MENU) }
                 )
@@ -245,6 +246,7 @@ fun ComplianceSlicerApp(
                     isLoading = uiState.isLeaderboardLoading,
                     errorMessage = uiState.leaderboardErrorMessage,
                     initialTab = 1,
+                    currentLanguage = uiState.currentLanguage,
                     onRefresh = { viewModel.refreshLeaderboard() },
                     onBack = { viewModel.navigateTo(GamePhase.MENU) }
                 )

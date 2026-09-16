@@ -130,12 +130,12 @@ class LeaderboardRepository(
                             if (continuation.isActive) continuation.resume(querySnapshot)
                         }
                         .addOnFailureListener { exception ->
-                            failureError = "${exception.javaClass.simpleName}: ${exception.message}"
+                            failureError = "Server Offline"
                             Log.e(TAG, "Firestore getTop100Leaderboard failed: ${exception.message}", exception)
                             if (continuation.isActive) continuation.resume(null)
                         }
                 } catch (e: Exception) {
-                    failureError = "${e.javaClass.simpleName}: ${e.message}"
+                    failureError = "Server Offline"
                     Log.e(TAG, "Firestore query invocation exception: ${e.message}", e)
                     if (continuation.isActive) continuation.resume(null)
                 }
@@ -184,12 +184,12 @@ class LeaderboardRepository(
             } else {
                 // Fallback to room cache with captured error
                 val cached = loadFromCache(isOfflineFallback = true)
-                cached.copy(errorMessage = failureError)
+                cached.copy(errorMessage = failureError ?: "Server Offline")
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to fetch remote leaderboard: ${e.message}", e)
             val cached = loadFromCache(isOfflineFallback = true)
-            cached.copy(errorMessage = "${e.javaClass.simpleName}: ${e.message}")
+            cached.copy(errorMessage = "Server Offline")
         }
     }
 
