@@ -395,4 +395,48 @@
     <string name="comic_ep3_title">Uang Capek</string>
     <string name="comic_ep4_title">Sponsor Sultan yang Bikin Deg-degan</string>
     <string name="comic_ep5_title">Sulap Anggaran yang Berujung Penjara</string>
+
+    <!-- Forgot Password Strings -->
+    <string name="auth_reset_password_title">Reset Password</string>
+    <string name="auth_reset_password_subtitle">Enter your registered username and set a new password.</string>
+    <string name="auth_new_password_label">New Password</string>
+    <string name="auth_new_password_placeholder">Enter new password</string>
+    <string name="auth_confirm_password_label">Confirm Password</string>
+    <string name="auth_confirm_password_placeholder">Re-enter new password</string>
+    <string name="auth_reset_password_button">Reset Password</string>
+    <string name="auth_reset_password_success">Password updated successfully! You can now log in.</string>
+    <string name="auth_error_passwords_dont_match">Passwords do not match</string>
+    <string name="auth_error_user_not_found">Username \'%1$s\' not found</string>
+    <string name="auth_error_password_too_short">Password must be at least 4 characters</string>
+    <string name="auth_cancel">Cancel</string>
+
+    <!-- Gameplay Rules Card & Dialog Strings -->
+    <string name="rules_action_slice">⚔️ SLICE</string>
+    <string name="rules_action_protect">🛡️ PROTECT</string>
+    <string name="rules_action_trap">⚠️ TRAP</string>
+    <string name="rules_action_bonus">💎 BONUS</string>
+
+    <string name="rules_card_point_violations">+10 PTS × Combo</string>
+    <string name="rules_card_point_legitimate">-1 Life if sliced</string>
+    <string name="rules_card_point_traps">-10 Pts if sliced</string>
+    <string name="rules_card_point_bonus">+1 Life &amp; +25 Pts</string>
+
+    <string name="rules_dialog_directive_violations">⚔️ MUST SLASH!</string>
+    <string name="rules_dialog_desc_violations">Slash immediately before it falls past the screen. Slicing gives points and increases combo.</string>
+    <string name="rules_dialog_directive_legitimate">🛡️ PROTECT! DO NOT SLASH!</string>
+    <string name="rules_dialog_desc_legitimate">Let legitimate documents fall freely. Slicing legitimate documents breaches compliance and costs 1 LIFE!</string>
+    <string name="rules_dialog_directive_traps">⚠️ TRAP! AVOID SLICING!</string>
+    <string name="rules_dialog_desc_traps">This is unproven bait or a hoax. Slicing it inflicts a -10 POINTS PENALTY and resets combo.</string>
+    <string name="rules_dialog_directive_bonus">💎 GOLDEN SHIELD! CLAIM IT!</string>
+    <string name="rules_dialog_desc_bonus">Slice this rare golden shield to restore +1 LIFE (max 4) and gain +25 bonus points!</string>
+
+    <string name="rules_dialog_section_game_rules">GAME ARENA RULES:</string>
+    <string name="rules_dialog_section_governance">COMPLIANCE CONTEXT:</string>
+
+    <string name="rules_tip_violations">Focus your slash within the safe zone. Don\'t let violations escape below!</string>
+    <string name="rules_tip_legitimate">Look out for official seals or blue color. Don\'t panic swipe!</string>
+    <string name="rules_tip_traps">Trap items often appear close to violations. Inspect carefully before slicing!</string>
+    <string name="rules_tip_bonus">Golden shields are very valuable. Prioritize slicing them to extend your shift!</string>
+    <string name="rules_dialog_close">Understood</string>
+    <string name="rules_items_count">%1$d Items</string>
 </resources>

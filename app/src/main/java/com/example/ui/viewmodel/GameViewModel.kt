@@ -383,6 +383,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         return authRepository.isUsernameTaken(username)
     }
 
+    suspend fun resetPassword(username: String, newPass: String): AuthResult {
+        return authRepository.resetPassword(username, newPass)
+    }
+
     fun onTrailerDismissed() {
         _uiState.value = _uiState.value.copy(shouldShowTrailer = false)
     }

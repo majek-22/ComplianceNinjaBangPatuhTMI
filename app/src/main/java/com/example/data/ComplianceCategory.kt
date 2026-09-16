@@ -361,7 +361,7 @@ enum class ComplianceCategory(
             SHIELD -> if (isId) "Perisai Kepatuhan" else "Compliance Shield"
             WHISTLEBLOWER -> if (isId) "Saluran WBS (Pelapor)" else "Whistleblower Hotline"
             STAR_AUDITOR -> if (isId) "Auditor Teladan" else "Star Auditor"
-            BONUS_CORRUPTOR -> "Corruptor"
+            BONUS_CORRUPTOR -> if (isId) "Koruptor (Bonus)" else "Corruptor (Bonus)"
         }
     }
 

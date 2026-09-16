@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -10,11 +11,13 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
+import com.example.data.ComplianceCategory
 import com.example.data.GlossaryEntry
 import com.example.data.GlossarySection
 import com.example.ui.theme.CoralPrimary
@@ -87,9 +91,12 @@ private enum class RulesTabFilter {
 
 @Composable
 fun IconGlossaryScreen(
+    currentLanguage: String = "en",
+    onToggleLanguage: (() -> Unit)? = null,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isId = currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true)
     var selectedEntry by remember { mutableStateOf<GlossaryEntry?>(null) }
     var currentFilter by remember { mutableStateOf(RulesTabFilter.ALL) }
 
@@ -131,7 +138,10 @@ fun IconGlossaryScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
@@ -143,7 +153,7 @@ fun IconGlossaryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = if (isId) "Kembali" else "Back",
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
@@ -151,43 +161,108 @@ fun IconGlossaryScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = stringResource(R.string.glossary_title),
+                            text = if (isId) "Aturan Permainan" else "Gameplay Rules",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Black
                         )
                         Text(
-                            text = stringResource(R.string.glossary_subtitle),
+                            text = if (isId) "Panduan identifikasi item & konsekuensi skor" else "Item identification guide & score mechanics",
                             color = Color(0xFF90CAF9),
                             fontSize = 11.sp
                         )
                     }
                 }
 
-                // Total Badges Counter Badge
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0x22FFC857),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, GoldSecondary.copy(alpha = 0.5f))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "${GlossaryEntry.ALL_ENTRIES.size} Items",
-                        color = GoldSecondary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
+                    // Language Switcher Button (Identical to MainMenuScreen!)
+                    if (onToggleLanguage != null) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color(0xDD091522),
+                            border = BorderStroke(
+                                1.dp,
+                                Brush.horizontalGradient(
+                                    listOf(Color(0x33FFFFFF), Color(0x44FF5252))
+                                )
+                            ),
+                            shadowElevation = 6.dp
+                        ) {
+                            val langInteraction = remember { MutableInteractionSource() }
+                            Box(
+                                modifier = Modifier
+                                    .height(34.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable(
+                                        interactionSource = langInteraction,
+                                        indication = null,
+                                        onClick = onToggleLanguage
+                                    )
+                                    .padding(horizontal = 7.dp)
+                                    .testTag("glossary_lang_toggle"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Crossfade(
+                                    targetState = currentLanguage,
+                                    animationSpec = tween(250),
+                                    label = "language_toggle_crossfade"
+                                ) { lang ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                    ) {
+                                        Text(
+                                            text = "🌐",
+                                            fontSize = 11.sp
+                                        )
+                                        Text(
+                                            text = if (lang == "in" || lang == "id") "ID" else "EN",
+                                            color = GoldSecondary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Black
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Total Badges Counter Badge
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color(0xDD091522),
+                        border = BorderStroke(1.dp, GoldSecondary.copy(alpha = 0.5f)),
+                        shadowElevation = 6.dp
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(34.dp)
+                                .padding(horizontal = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (isId) "${GlossaryEntry.ALL_ENTRIES.size} Item" else "${GlossaryEntry.ALL_ENTRIES.size} Items",
+                                color = GoldSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                    }
                 }
             }
 
             // Quick Combat Directives Banner (Aturan Inti)
-            CombatDirectivesBanner()
+            CombatDirectivesBanner(isId = isId)
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Game Style Filter Tabs
             RulesFilterTabs(
                 currentFilter = currentFilter,
+                isId = isId,
                 onFilterSelected = { currentFilter = it }
             )
 
@@ -203,6 +278,7 @@ fun IconGlossaryScreen(
                 items(filteredEntries, key = { it.category.name }) { entry ->
                     GlossaryCard(
                         entry = entry,
+                        isId = isId,
                         onSelect = { selectedEntry = entry }
                     )
                 }
@@ -217,6 +293,7 @@ fun IconGlossaryScreen(
         selectedEntry?.let { entry ->
             IconDetailDialog(
                 entry = entry,
+                isId = isId,
                 onDismiss = { selectedEntry = null }
             )
         }
@@ -227,7 +304,7 @@ fun IconGlossaryScreen(
  * High-impact 4-way visual summary of the core gameplay rules
  */
 @Composable
-private fun CombatDirectivesBanner() {
+private fun CombatDirectivesBanner(isId: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,16 +319,16 @@ private fun CombatDirectivesBanner() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DirectiveItem(
-                    title = stringResource(R.string.rules_directive_slice_title),
-                    subtitle = stringResource(R.string.rules_directive_slice_sub),
+                    title = if (isId) "TEBAS PELANGGARAN" else "SLICE VIOLATIONS",
+                    subtitle = if (isId) "+10 Poin × Kombo" else "+10 Pts × Combo",
                     color = Color(0xFFFFC857),
                     iconEmoji = "⚔️",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 DirectiveItem(
-                    title = stringResource(R.string.rules_directive_protect_title),
-                    subtitle = stringResource(R.string.rules_directive_protect_sub),
+                    title = if (isId) "LINDUNGI DOKUMEN" else "PROTECT DOCUMENTS",
+                    subtitle = if (isId) "Jangan tebas (-1 Nyawa)" else "Do not slice (-1 Life)",
                     color = Color(0xFF64B5F6),
                     iconEmoji = "🛡️",
                     modifier = Modifier.weight(1f)
@@ -264,16 +341,16 @@ private fun CombatDirectivesBanner() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DirectiveItem(
-                    title = stringResource(R.string.rules_directive_trap_title),
-                    subtitle = stringResource(R.string.rules_directive_trap_sub),
+                    title = if (isId) "HINDARI JEBAKAN" else "AVOID TRAPS",
+                    subtitle = if (isId) "Hoaks/umpan (-10 Poin)" else "Hoax/bait (-10 Pts)",
                     color = Color(0xFFFF5252),
                     iconEmoji = "⚠️",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 DirectiveItem(
-                    title = stringResource(R.string.rules_directive_bonus_title),
-                    subtitle = stringResource(R.string.rules_directive_bonus_sub),
+                    title = if (isId) "AMBIL PERISAI & BONUS" else "CLAIM SHIELD & BONUS",
+                    subtitle = if (isId) "+1 Nyawa / Freeze +10 Pts" else "+1 Life / Freeze +10 Pts",
                     color = Color(0xFF00E676),
                     iconEmoji = "💎",
                     modifier = Modifier.weight(1f)
@@ -328,6 +405,7 @@ private fun DirectiveItem(
 @Composable
 private fun RulesFilterTabs(
     currentFilter: RulesTabFilter,
+    isId: Boolean,
     onFilterSelected: (RulesTabFilter) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -340,12 +418,12 @@ private fun RulesFilterTabs(
     ) {
         RulesTabFilter.entries.forEach { filter ->
             val isSelected = currentFilter == filter
-            val labelRes = when (filter) {
-                RulesTabFilter.ALL -> R.string.rules_tab_all
-                RulesTabFilter.VIOLATIONS -> R.string.rules_tab_violations
-                RulesTabFilter.LEGITIMATE -> R.string.rules_tab_legitimate
-                RulesTabFilter.TRAPS -> R.string.rules_tab_traps
-                RulesTabFilter.BONUS -> R.string.rules_tab_bonus
+            val label = when (filter) {
+                RulesTabFilter.ALL -> if (isId) "Semua" else "All"
+                RulesTabFilter.VIOLATIONS -> if (isId) "Pelanggaran" else "Violations"
+                RulesTabFilter.LEGITIMATE -> if (isId) "Dokumen Sah" else "Legitimate"
+                RulesTabFilter.TRAPS -> if (isId) "Jebakan" else "Traps"
+                RulesTabFilter.BONUS -> if (isId) "Bonus" else "Bonus"
             }
             val count = when (filter) {
                 RulesTabFilter.ALL -> GlossaryEntry.ALL_ENTRIES.size
@@ -384,7 +462,7 @@ private fun RulesFilterTabs(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(labelRes),
+                        text = label,
                         color = if (isSelected) accentColor else Color(0xFFCFD8DC),
                         fontSize = 12.sp,
                         fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium
@@ -414,13 +492,45 @@ private fun RulesFilterTabs(
 @Composable
 private fun GlossaryCard(
     entry: GlossaryEntry,
+    isId: Boolean,
     onSelect: () -> Unit
 ) {
-    val (badgeColor, actionLabel, pointText) = when (entry.section) {
-        GlossarySection.VIOLATIONS -> Triple(Color(0xFFFFC857), "⚔️ TEBAS", "+10 PTS × Kombo")
-        GlossarySection.LEGITIMATE -> Triple(Color(0xFF64B5F6), "🛡️ LINDUNGI", "-1 Nyawa jika tertebas")
-        GlossarySection.TRAPS -> Triple(Color(0xFFFF5252), "⚠️ JEBAKAN", "-10 Pts jika tertebas")
-        GlossarySection.BONUS -> Triple(Color(0xFF00E676), "💎 BONUS", "+1 Nyawa & +25 Pts")
+    val (badgeColor, actionLabel, pointText) = when {
+        entry.category == ComplianceCategory.BONUS_CORRUPTOR -> Triple(
+            Color(0xFF00E676),
+            if (isId) "❄️ FREEZE BONUS" else "❄️ FREEZE BONUS",
+            if (isId) "+10 Pts / Tebasan (Mode Freeze)" else "+10 Pts / Slice (Freeze Mode)"
+        )
+        entry.category == ComplianceCategory.SHIELD -> Triple(
+            Color(0xFF00E676),
+            if (isId) "💎 PERISAI" else "💎 SHIELD",
+            if (isId) "+1 Nyawa & +25 Pts" else "+1 Life & +25 Pts"
+        )
+        entry.category == ComplianceCategory.SYSTEMIC_CORRUPTION -> Triple(
+            Color(0xFFFFC857),
+            if (isId) "⚔️ TEBAS" else "⚔️ SLICE",
+            if (isId) "+25 Pts × Kombo" else "+25 Pts × Combo"
+        )
+        entry.section == GlossarySection.VIOLATIONS -> Triple(
+            Color(0xFFFFC857),
+            if (isId) "⚔️ TEBAS" else "⚔️ SLICE",
+            if (isId) "+10 Pts × Kombo" else "+10 Pts × Combo"
+        )
+        entry.section == GlossarySection.LEGITIMATE -> Triple(
+            Color(0xFF64B5F6),
+            if (isId) "🛡️ LINDUNGI" else "🛡️ PROTECT",
+            if (isId) "-1 Nyawa jika tertebas" else "-1 Life if sliced"
+        )
+        entry.section == GlossarySection.TRAPS -> Triple(
+            Color(0xFFFF5252),
+            if (isId) "⚠️ JEBAKAN" else "⚠️ TRAP",
+            if (isId) "-10 Pts jika tertebas" else "-10 Pts if sliced"
+        )
+        else -> Triple(
+            Color(0xFF00E676),
+            if (isId) "💎 BONUS" else "💎 BONUS",
+            if (isId) "+10 Pts / Tebasan" else "+10 Pts / Slice"
+        )
     }
 
     val discBgColor = when (entry.section) {
@@ -429,6 +539,9 @@ private fun GlossaryCard(
         GlossarySection.TRAPS -> Color(0xFF3E0E0E)
         GlossarySection.BONUS -> Color(0xFF052F1A)
     }
+
+    val itemDisplayName = entry.category.getDisplayName(if (isId) "in" else "en")
+    val itemExplanation = entry.category.getExplanation(if (isId) "in" else "en")
 
     Card(
         modifier = Modifier
@@ -456,7 +569,7 @@ private fun GlossaryCard(
                 // High-resolution full-color illustration - NO TINT!
                 Image(
                     painter = painterResource(id = entry.category.iconRes),
-                    contentDescription = stringResource(entry.category.displayNameRes),
+                    contentDescription = itemDisplayName,
                     modifier = Modifier.size(46.dp),
                     contentScale = ContentScale.Fit
                 )
@@ -471,7 +584,7 @@ private fun GlossaryCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(entry.category.displayNameRes),
+                        text = itemDisplayName,
                         color = Color.White,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
@@ -509,7 +622,7 @@ private fun GlossaryCard(
 
                 // Real-world explanation
                 Text(
-                    text = stringResource(entry.explanationRes),
+                    text = itemExplanation,
                     color = Color(0xFFCFD8DC),
                     fontSize = 11.sp,
                     lineHeight = 15.sp,
@@ -522,7 +635,7 @@ private fun GlossaryCard(
 
             Icon(
                 imageVector = Icons.Default.Info,
-                contentDescription = stringResource(R.string.rules_tap_details_hint),
+                contentDescription = if (isId) "Ketuk untuk melihat detail" else "Tap to view details",
                 tint = badgeColor.copy(alpha = 0.7f),
                 modifier = Modifier.size(18.dp)
             )
@@ -530,36 +643,113 @@ private fun GlossaryCard(
     }
 }
 
+private data class RulesDialogInfo(
+    val badgeColor: Color,
+    val directive: String,
+    val desc: String,
+    val tip: String
+)
+
 /**
  * Rich Tactical Investigation Dossier Dialog
  */
 @Composable
 private fun IconDetailDialog(
     entry: GlossaryEntry,
+    isId: Boolean,
     onDismiss: () -> Unit
 ) {
-    val (badgeColor, actionDirective, actionDesc) = when (entry.section) {
-        GlossarySection.VIOLATIONS -> Triple(
-            Color(0xFFFFC857),
-            "⚔️ WAJIB DITEBAS!",
-            "Segera tebas sebelum jatuh melewati batas layar. Menebas memberikan poin dan menaikkan kombo."
+    val info = when {
+        entry.category == ComplianceCategory.BONUS_CORRUPTOR -> RulesDialogInfo(
+            badgeColor = Color(0xFF00E676),
+            directive = if (isId) "❄️ KORUPTOR BONUS! BEKUKAN & TEBAS!" else "❄️ BONUS CORRUPTOR! FREEZE & SLICE!",
+            desc = if (isId)
+                "Tebas target koruptor ini untuk menghentikan waktu (Mode Freeze) selama 5 detik! Selama waktu membeku, tebas target ini sebanyak mungkin: setiap tebasan menghasilkan +10 poin bonus!"
+            else
+                "Slice this corruptor target to freeze time (Freeze Mode) for 5 seconds! While time is frozen, slash the corruptor as many times as possible: each slash awards +10 bonus points!",
+            tip = if (isId)
+                "Manfaatkan 5 detik waktu membeku untuk melakukan gesekan cepat beruntun demi memaksimalkan perolehan skor bonus!"
+            else
+                "Take advantage of the 5-second freeze to perform rapid multi-slashes and maximize your bonus score!"
         )
-        GlossarySection.LEGITIMATE -> Triple(
-            Color(0xFF64B5F6),
-            "🛡️ LINDUNGI! JANGAN DITEBAS!",
-            "Biarkan dokumen sah jatuh bebas. Menebas dokumen sah akan merusak kepatuhan dan mengurangi 1 NYAWA!"
+        entry.category == ComplianceCategory.SHIELD -> RulesDialogInfo(
+            badgeColor = Color(0xFF00E676),
+            directive = if (isId) "💎 PERISAI EMAS! SEGERA AMBIL!" else "💎 GOLDEN SHIELD! CLAIM IT!",
+            desc = if (isId)
+                "Tebas perisai emas langka ini untuk memulihkan +1 NYAWA (maksimal 4) dan memperoleh skor bonus +25 poin!"
+            else
+                "Slice this rare golden shield to restore +1 LIFE (max 4) and gain +25 bonus points!",
+            tip = if (isId)
+                "Perisai emas sangat berharga. Utamakan menebasnya untuk memperpanjang shift Anda!"
+            else
+                "Golden shields are very valuable. Prioritize slicing them to extend your shift!"
         )
-        GlossarySection.TRAPS -> Triple(
-            Color(0xFFFF5252),
-            "⚠️ JEBAKAN! HINDARI DITEBAS!",
-            "Ini adalah umpan/hoaks yang belum terbukti. Menebasnya akan dikenai PENALTI -10 POIN dan memutus kombo."
+        entry.category == ComplianceCategory.SYSTEMIC_CORRUPTION -> RulesDialogInfo(
+            badgeColor = Color(0xFFFFC857),
+            directive = if (isId) "⚔️ KORUPSI SISTEMIK! POIN TINGGI!" else "⚔️ SYSTEMIC CORRUPTION! HIGH SCORE!",
+            desc = if (isId)
+                "Pelanggaran korupsi sistemik bernilai poin tinggi (+25 Poin × Kombo). Segera tebas sebelum lolos ke bawah batas layar!"
+            else
+                "High-value systemic corruption violation (+25 Pts × Combo). Slash immediately before it escapes past the bottom screen!",
+            tip = if (isId)
+                "Memberikan skor dasar tertinggi (+25 Poin) di antara semua jenis pelanggaran. Jangan sampai terlewat!"
+            else
+                "Awards the highest base score (+25 Pts) among all violation types. Never let it pass!"
         )
-        GlossarySection.BONUS -> Triple(
-            Color(0xFF00E676),
-            "💎 PERISAI EMAS! SEGERA AMBIL!",
-            "Tebas perisai emas langka ini untuk memulihkan +1 NYAWA (maksimal 4) dan memperoleh skor bonus +25 poin!"
+        entry.section == GlossarySection.VIOLATIONS -> RulesDialogInfo(
+            badgeColor = Color(0xFFFFC857),
+            directive = if (isId) "⚔️ WAJIB DITEBAS!" else "⚔️ MUST SLASH!",
+            desc = if (isId)
+                "Segera tebas sebelum jatuh melewati batas layar. Menebas memberikan poin dan menaikkan kombo."
+            else
+                "Slash immediately before it falls past the screen. Slicing gives points and increases combo.",
+            tip = if (isId)
+                "Fokus tebas saat berada di area aman. Jangan biarkan lolos ke bawah!"
+            else
+                "Focus your slash within the safe zone. Don't let violations escape below!"
+        )
+        entry.section == GlossarySection.LEGITIMATE -> RulesDialogInfo(
+            badgeColor = Color(0xFF64B5F6),
+            directive = if (isId) "🛡️ LINDUNGI! JANGAN DITEBAS!" else "🛡️ PROTECT! DO NOT SLASH!",
+            desc = if (isId)
+                "Biarkan dokumen sah jatuh bebas. Menebas dokumen sah akan merusak kepatuhan dan mengurangi 1 NYAWA!"
+            else
+                "Let legitimate documents fall freely. Slicing legitimate documents breaches compliance and costs 1 LIFE!",
+            tip = if (isId)
+                "Perhatikan cap resmi atau warna biru. Jangan panik menggesek layar!"
+            else
+                "Look out for official seals or blue color. Don't panic swipe!"
+        )
+        entry.section == GlossarySection.TRAPS -> RulesDialogInfo(
+            badgeColor = Color(0xFFFF5252),
+            directive = if (isId) "⚠️ JEBAKAN! HINDARI DITEBAS!" else "⚠️ TRAP! AVOID SLICING!",
+            desc = if (isId)
+                "Ini adalah umpan/hoaks yang belum terbukti. Menebasnya akan dikenai PENALTI -10 POIN dan memutus kombo."
+            else
+                "This is unproven bait or a hoax. Slicing it inflicts a -10 POINTS PENALTY and resets combo.",
+            tip = if (isId)
+                "Item jebakan sering muncul berdekatan dengan pelanggaran. Teliti sebelum menebas!"
+            else
+                "Trap items often appear close to violations. Inspect carefully before slicing!"
+        )
+        else -> RulesDialogInfo(
+            badgeColor = Color(0xFF00E676),
+            directive = if (isId) "💎 PERISAI EMAS! SEGERA AMBIL!" else "💎 GOLDEN SHIELD! CLAIM IT!",
+            desc = if (isId)
+                "Tebas perisai emas langka ini untuk memulihkan +1 NYAWA (maksimal 4) dan memperoleh skor bonus +25 poin!"
+            else
+                "Slice this rare golden shield to restore +1 LIFE (max 4) and gain +25 bonus points!",
+            tip = if (isId)
+                "Perisai emas sangat berharga. Utamakan menebasnya untuk memperpanjang shift Anda!"
+            else
+                "Golden shields are very valuable. Prioritize slicing them to extend your shift!"
         )
     }
+
+    val badgeColor = info.badgeColor
+    val actionDirective = info.directive
+    val actionDesc = info.desc
+    val tipText = info.tip
 
     val discBgColor = when (entry.section) {
         GlossarySection.VIOLATIONS -> Color(0xFF3E2805)
@@ -567,6 +757,9 @@ private fun IconDetailDialog(
         GlossarySection.TRAPS -> Color(0xFF3E0E0E)
         GlossarySection.BONUS -> Color(0xFF052F1A)
     }
+
+    val itemDisplayName = entry.category.getDisplayName(if (isId) "in" else "en")
+    val itemExplanation = entry.category.getExplanation(if (isId) "in" else "en")
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse_glow")
     val glowScale by infiniteTransition.animateFloat(
@@ -609,7 +802,7 @@ private fun IconDetailDialog(
                 ) {
                     Image(
                         painter = painterResource(id = entry.category.iconRes),
-                        contentDescription = stringResource(entry.category.displayNameRes),
+                        contentDescription = itemDisplayName,
                         modifier = Modifier.size(64.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -619,7 +812,7 @@ private fun IconDetailDialog(
 
                 // Item Name
                 Text(
-                    text = stringResource(entry.category.displayNameRes),
+                    text = itemDisplayName,
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
@@ -655,7 +848,7 @@ private fun IconDetailDialog(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "ATURAN ARENA GAME:",
+                            text = if (isId) "ATURAN ARENA GAME:" else "GAME ARENA RULES:",
                             color = badgeColor,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Black
@@ -671,14 +864,14 @@ private fun IconDetailDialog(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "KONTEKS TATA KELOLA:",
+                            text = if (isId) "KONTEKS TATA KELOLA:" else "COMPLIANCE CONTEXT:",
                             color = Color(0xFF90CAF9),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Black
                         )
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = stringResource(entry.explanationRes),
+                            text = itemExplanation,
                             color = Color(0xFFB0BEC5),
                             fontSize = 12.sp,
                             lineHeight = 16.sp
@@ -705,18 +898,13 @@ private fun IconDetailDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = stringResource(R.string.rules_ninja_tip_label),
+                            text = if (isId) "TIPS PATUH NINJA:" else "NINJA PATUH TIP:",
                             color = GoldSecondary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Black
                         )
                         Text(
-                            text = when (entry.section) {
-                                GlossarySection.VIOLATIONS -> "Fokus tebas saat berada di area aman. Jangan biarkan lolos ke bawah!"
-                                GlossarySection.LEGITIMATE -> "Perhatikan cap resmi atau warna biru. Jangan panik menggesek layar!"
-                                GlossarySection.TRAPS -> "Item jebakan sering muncul berdekatan dengan pelanggaran. Teliti sebelum menebas!"
-                                GlossarySection.BONUS -> "Perisai emas sangat berharga. Utamakan menebasnya untuk memperpanjang shift Anda!"
-                            },
+                            text = tipText,
                             color = Color(0xFFFFF8E1),
                             fontSize = 10.sp,
                             lineHeight = 13.sp
@@ -740,7 +928,7 @@ private fun IconDetailDialog(
                     )
                 ) {
                     Text(
-                        text = stringResource(R.string.glossary_dialog_got_it),
+                        text = if (isId) "Dimengerti" else "Understood",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Black
                     )

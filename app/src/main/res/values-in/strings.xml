@@ -395,4 +395,48 @@
     <string name="comic_ep3_title">Uang Capek</string>
     <string name="comic_ep4_title">Sponsor Sultan yang Bikin Deg-degan</string>
     <string name="comic_ep5_title">Sulap Anggaran yang Berujung Penjara</string>
+
+    <!-- Forgot Password Strings -->
+    <string name="auth_reset_password_title">Atur Ulang Kata Sandi</string>
+    <string name="auth_reset_password_subtitle">Masukkan username terdaftar dan buat kata sandi baru.</string>
+    <string name="auth_new_password_label">Kata Sandi Baru</string>
+    <string name="auth_new_password_placeholder">Masukkan kata sandi baru</string>
+    <string name="auth_confirm_password_label">Konfirmasi Kata Sandi</string>
+    <string name="auth_confirm_password_placeholder">Masukkan ulang kata sandi</string>
+    <string name="auth_reset_password_button">Simpan Kata Sandi</string>
+    <string name="auth_reset_password_success">Kata sandi berhasil diperbarui! Silakan masuk.</string>
+    <string name="auth_error_passwords_dont_match">Kata sandi konfirmasi tidak cocok</string>
+    <string name="auth_error_user_not_found">Username \'%1$s\' tidak ditemukan</string>
+    <string name="auth_error_password_too_short">Kata sandi minimal 4 karakter</string>
+    <string name="auth_cancel">Batal</string>
+
+    <!-- Gameplay Rules Card & Dialog Strings -->
+    <string name="rules_action_slice">⚔️ TEBAS</string>
+    <string name="rules_action_protect">🛡️ LINDUNGI</string>
+    <string name="rules_action_trap">⚠️ JEBAKAN</string>
+    <string name="rules_action_bonus">💎 BONUS</string>
+
+    <string name="rules_card_point_violations">+10 PTS × Kombo</string>
+    <string name="rules_card_point_legitimate">-1 Nyawa jika tertebas</string>
+    <string name="rules_card_point_traps">-10 Pts jika tertebas</string>
+    <string name="rules_card_point_bonus">+1 Nyawa &amp; +25 Pts</string>
+
+    <string name="rules_dialog_directive_violations">⚔️ WAJIB DITEBAS!</string>
+    <string name="rules_dialog_desc_violations">Segera tebas sebelum jatuh melewati batas layar. Menebas memberikan poin dan menaikkan kombo.</string>
+    <string name="rules_dialog_directive_legitimate">🛡️ LINDUNGI! JANGAN DITEBAS!</string>
+    <string name="rules_dialog_desc_legitimate">Biarkan dokumen sah jatuh bebas. Menebas dokumen sah akan merusak kepatuhan dan mengurangi 1 NYAWA!</string>
+    <string name="rules_dialog_directive_traps">⚠️ JEBAKAN! HINDARI DITEBAS!</string>
+    <string name="rules_dialog_desc_traps">Ini adalah umpan/hoaks yang belum terbukti. Menebasnya akan dikenai PENALTI -10 POIN dan memutus kombo.</string>
+    <string name="rules_dialog_directive_bonus">💎 PERISAI EMAS! SEGERA AMBIL!</string>
+    <string name="rules_dialog_desc_bonus">Tebas perisai emas langka ini untuk memulihkan +1 NYAWA (maksimal 4) dan memperoleh skor bonus +25 poin!</string>
+
+    <string name="rules_dialog_section_game_rules">ATURAN ARENA GAME:</string>
+    <string name="rules_dialog_section_governance">KONTEKS TATA KELOLA:</string>
+
+    <string name="rules_tip_violations">Fokus tebas saat berada di area aman. Jangan biarkan lolos ke bawah!</string>
+    <string name="rules_tip_legitimate">Perhatikan cap resmi atau warna biru. Jangan panik menggesek layar!</string>
+    <string name="rules_tip_traps">Item jebakan sering muncul berdekatan dengan pelanggaran. Teliti sebelum menebas!</string>
+    <string name="rules_tip_bonus">Perisai emas sangat berharga. Utamakan menebasnya untuk memperpanjang shift Anda!</string>
+    <string name="rules_dialog_close">Dimengerti</string>
+    <string name="rules_items_count">%1$d Item</string>
 </resources>

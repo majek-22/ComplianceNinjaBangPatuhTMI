@@ -90,6 +90,22 @@ class AuthRepository(
         }
     }
 
+    suspend fun resetPassword(username: String, newPass: String): AuthResult {
+        val cleanUser = username.trim()
+        if (cleanUser.isBlank() || newPass.isBlank()) {
+            return AuthResult.Error("Username and new password cannot be empty")
+        }
+        if (newPass.length < 4) {
+            return AuthResult.Error("Password must be at least 4 characters")
+        }
+        val account = database.userAccountDao().getByUsername(cleanUser)
+            ?: return AuthResult.Error("User '$cleanUser' not found")
+
+        val newHash = hashPassword(newPass)
+        database.userAccountDao().updatePassword(account.username, newHash)
+        return AuthResult.Success(account.username)
+    }
+
     suspend fun logout() {
         sessionManager.clearSession()
     }

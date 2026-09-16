@@ -56,9 +56,17 @@ import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.example.data.AuthResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -355,6 +363,7 @@ fun LoginRegisterScreen(
     onCheckUsernameTaken: suspend (String) -> Boolean,
     onLogin: (username: String, pass: String) -> Unit,
     onRegister: (username: String, pass: String) -> Unit,
+    onResetPassword: (suspend (username: String, newPass: String) -> AuthResult)? = null,
     onToggleLanguage: () -> Unit,
     onToggleAudioMute: () -> Unit,
     modifier: Modifier = Modifier
@@ -365,6 +374,8 @@ fun LoginRegisterScreen(
     var password by remember { mutableStateOf("") }
     var showPassword by rememberSaveable { mutableStateOf(false) }
     var rememberMe by rememberSaveable { mutableStateOf(true) }
+    var showResetPasswordDialog by remember { mutableStateOf(false) }
+    var resetSuccessNotification by remember { mutableStateOf<String?>(null) }
 
     var isUsernameTaken by remember { mutableStateOf(false) }
     var isCheckingUsername by remember { mutableStateOf(false) }
@@ -518,6 +529,7 @@ fun LoginRegisterScreen(
                             keyboardController?.hide()
                             selectedTab = tab
                             isUsernameTaken = false
+                            resetSuccessNotification = null
                         },
                         username = username,
                         onUsernameChange = { input ->
@@ -533,6 +545,8 @@ fun LoginRegisterScreen(
                         isUsernameTaken = isUsernameTaken,
                         isCheckingUsername = isCheckingUsername,
                         errorMessage = errorMessage,
+                        successNotification = resetSuccessNotification,
+                        onForgotPasswordClick = { showResetPasswordDialog = true },
                         onSubmit = {
                             focusManager.clearFocus(force = true)
                             keyboardController?.hide()
@@ -569,6 +583,7 @@ fun LoginRegisterScreen(
                             keyboardController?.hide()
                             selectedTab = tab
                             isUsernameTaken = false
+                            resetSuccessNotification = null
                         },
                         username = username,
                         onUsernameChange = { input ->
@@ -584,6 +599,8 @@ fun LoginRegisterScreen(
                         isUsernameTaken = isUsernameTaken,
                         isCheckingUsername = isCheckingUsername,
                         errorMessage = errorMessage,
+                        successNotification = resetSuccessNotification,
+                        onForgotPasswordClick = { showResetPasswordDialog = true },
                         onSubmit = {
                             focusManager.clearFocus(force = true)
                             keyboardController?.hide()
@@ -602,6 +619,32 @@ fun LoginRegisterScreen(
                     )
                 }
             }
+        }
+
+        // Forgot / Reset Password Dialog
+        if (showResetPasswordDialog) {
+            ResetPasswordDialog(
+                initialUsername = username,
+                currentLanguage = currentLanguage,
+                onDismiss = { showResetPasswordDialog = false },
+                onConfirmReset = { user, newPass ->
+                    if (onResetPassword != null) {
+                        onResetPassword(user, newPass)
+                    } else {
+                        AuthResult.Error("Reset password service unavailable")
+                    }
+                },
+                onSuccess = { user, newPass ->
+                    username = user
+                    password = newPass
+                    resetSuccessNotification = if (currentLanguage == "in" || currentLanguage == "id") {
+                        "Password berhasil diubah! Silakan tekan MASUK."
+                    } else {
+                        "Password updated successfully! Please tap LOG IN."
+                    }
+                    showResetPasswordDialog = false
+                }
+            )
         }
     }
 }
@@ -632,6 +675,8 @@ fun CyberNinjaHudCard(
     isUsernameTaken: Boolean,
     isCheckingUsername: Boolean,
     errorMessage: String?,
+    successNotification: String? = null,
+    onForgotPasswordClick: () -> Unit = {},
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -786,6 +831,35 @@ fun CyberNinjaHudCard(
                             color = if (selectedTab == 1) Color(0xFF09111C) else Color(0xFF90A4AE),
                             fontSize = 11.5.sp,
                             fontWeight = if (selectedTab == 1) FontWeight.Black else FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
+            // Success notification banner if password was reset
+            if (!successNotification.isNullOrBlank()) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0x2200E676),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E676))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF00E676),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = successNotification,
+                            color = Color(0xFFB9F6CA),
+                            fontSize = 10.5.sp,
+                            lineHeight = 13.sp
                         )
                     }
                 }
@@ -959,16 +1033,18 @@ fun CyberNinjaHudCard(
                     )
                 }
 
-                // "Forgot password?" Link
-                Text(
-                    text = stringResource(R.string.auth_forgot_password),
-                    color = Color(0xFF80D8FF),
-                    fontSize = 11.sp,
-                    modifier = Modifier.clickable {
-                        // Helpful instant hint
-                        onPasswordChange("")
-                    }
-                )
+                // "Forgot password?" Link - ONLY shown on Log In tab (selectedTab == 0), deleted from Register tab
+                if (selectedTab == 0) {
+                    Text(
+                        text = stringResource(R.string.auth_forgot_password),
+                        color = Color(0xFF80D8FF),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .clickable { onForgotPasswordClick() }
+                            .testTag("auth_forgot_password_btn")
+                    )
+                }
             }
 
             // General Error Text if present
@@ -1059,6 +1135,278 @@ fun CyberNinjaHudCard(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Cyber-Ninja Styled Password Reset Dialog
+ * Allows registered users to recover and update their password.
+ */
+@Composable
+fun ResetPasswordDialog(
+    initialUsername: String,
+    currentLanguage: String,
+    onDismiss: () -> Unit,
+    onConfirmReset: suspend (username: String, newPass: String) -> AuthResult,
+    onSuccess: (username: String, newPass: String) -> Unit
+) {
+    val isId = currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true)
+    var resetUsername by remember { mutableStateOf(initialUsername) }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var showNewPassword by rememberSaveable { mutableStateOf(false) }
+    var showConfirmPassword by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    Dialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        properties = DialogProperties(dismissOnBackPress = !isLoading, dismissOnClickOutside = !isLoading)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 340.dp)
+                .border(1.5.dp, Color(0xFF00E5FF), RoundedCornerShape(20.dp))
+                .testTag("reset_password_dialog"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1626))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Header Lock Icon
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x3300E5FF))
+                        .border(1.5.dp, Color(0xFF00E5FF), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFF00E5FF),
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = if (isId) "Atur Ulang Kata Sandi" else "Reset Password",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black
+                )
+
+                Text(
+                    text = if (isId) "Masukkan username dan kata sandi baru akun Anda." else "Enter your username and set a new password.",
+                    color = Color(0xFF90A4AE),
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                )
+
+                if (!errorMessage.isNullOrBlank()) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0x33FF5252),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF5252))
+                    ) {
+                        Text(
+                            text = errorMessage ?: "",
+                            color = Color(0xFFFF8A80),
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // 1. Username field
+                CyberNinjaInputField(
+                    value = resetUsername,
+                    onValueChange = { input ->
+                        resetUsername = input.filter { it.isLetterOrDigit() }.take(10)
+                        errorMessage = null
+                    },
+                    placeholder = if (isId) "Username terdaftar" else "Registered username",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color(0xFF00E5FF),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    },
+                    testTag = "reset_username_input"
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 2. New Password field
+                CyberNinjaInputField(
+                    value = newPassword,
+                    onValueChange = {
+                        newPassword = it
+                        errorMessage = null
+                    },
+                    placeholder = if (isId) "Kata sandi baru (min. 4)" else "New password (min. 4 chars)",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = Color(0xFF00E5FF),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { showNewPassword = !showNewPassword },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (showNewPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = "Toggle visibility",
+                                tint = Color(0xFF00E5FF),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    },
+                    visualTransformation = if (showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    testTag = "reset_new_password_input"
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 3. Confirm Password field
+                CyberNinjaInputField(
+                    value = confirmPassword,
+                    onValueChange = {
+                        confirmPassword = it
+                        errorMessage = null
+                    },
+                    placeholder = if (isId) "Konfirmasi kata sandi baru" else "Confirm new password",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = Color(0xFF00E5FF),
+                            modifier = Modifier.size(17.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { showConfirmPassword = !showConfirmPassword },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (showConfirmPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = "Toggle visibility",
+                                tint = Color(0xFF00E5FF),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    },
+                    visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    testTag = "reset_confirm_password_input"
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Cancel
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        enabled = !isLoading
+                    ) {
+                        Text(
+                            text = if (isId) "Batal" else "Cancel",
+                            color = Color(0xFF90A4AE),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Reset Button
+                    Button(
+                        onClick = {
+                            val cleanUser = resetUsername.trim()
+                            if (cleanUser.isBlank()) {
+                                errorMessage = if (isId) "Username tidak boleh kosong" else "Username cannot be empty"
+                                return@Button
+                            }
+                            if (newPassword.length < 4) {
+                                errorMessage = if (isId) "Kata sandi minimal 4 karakter" else "Password must be at least 4 characters"
+                                return@Button
+                            }
+                            if (newPassword != confirmPassword) {
+                                errorMessage = if (isId) "Konfirmasi kata sandi tidak cocok" else "Passwords do not match"
+                                return@Button
+                            }
+                            coroutineScope.launch {
+                                isLoading = true
+                                val result = onConfirmReset(cleanUser, newPassword)
+                                isLoading = false
+                                when (result) {
+                                    is AuthResult.Success -> {
+                                        onSuccess(cleanUser, newPassword)
+                                    }
+                                    is AuthResult.Error -> {
+                                        errorMessage = if (isId && result.message.contains("not found", ignoreCase = true)) {
+                                            "Pengguna '$cleanUser' tidak ditemukan"
+                                        } else {
+                                            result.message
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(44.dp)
+                            .testTag("reset_password_submit_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00E5FF),
+                            contentColor = Color(0xFF09111C)
+                        ),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color(0xFF09111C),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = if (isId) "Simpan" else "Reset",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                    }
+                }
             }
         }
     }

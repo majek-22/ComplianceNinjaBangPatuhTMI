@@ -12,4 +12,7 @@ interface UserAccountDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(user: UserAccount): Long
+
+    @Query("UPDATE user_accounts SET passwordHash = :newPasswordHash WHERE username = :username COLLATE NOCASE")
+    suspend fun updatePassword(username: String, newPasswordHash: String): Int
 }

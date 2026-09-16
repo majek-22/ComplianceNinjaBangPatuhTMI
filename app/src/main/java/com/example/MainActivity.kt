@@ -170,6 +170,7 @@ fun ComplianceSlicerApp(
                     onCheckUsernameTaken = { u -> viewModel.isUsernameTaken(u) },
                     onLogin = { u, p -> viewModel.login(u, p) },
                     onRegister = { u, p -> viewModel.register(u, p) },
+                    onResetPassword = { u, p -> viewModel.resetPassword(u, p) },
                     onToggleLanguage = { viewModel.toggleLanguage { activity?.recreate() } },
                     onToggleAudioMute = { viewModel.toggleAudioMute() }
                 )
@@ -213,6 +214,8 @@ fun ComplianceSlicerApp(
 
             GamePhase.GLOSSARY -> {
                 IconGlossaryScreen(
+                    currentLanguage = uiState.currentLanguage,
+                    onToggleLanguage = { viewModel.toggleLanguage { activity?.recreate() } },
                     onBack = { viewModel.closeGlossary() }
                 )
             }
