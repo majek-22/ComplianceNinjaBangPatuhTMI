@@ -474,11 +474,12 @@ fun ResultScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
+                            // Samurai Katana Sword slice icon matching MainMenu
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_sword_slash),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                painter = painterResource(id = R.drawable.ic_katana_slice),
+                                contentDescription = "Katana Slice",
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(26.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             val playAgainLabel = when (currentLanguage.lowercase()) {

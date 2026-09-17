@@ -74,7 +74,7 @@ fun ProfileScreen(
     val avatarId = if (stats.avatarId in 1..10) stats.avatarId else ((abs(username.hashCode()) % 10) + 1)
     val avatarRes = AvatarHelper.getAvatarRes(avatarId, username)
     val avatarTitle = AvatarHelper.getAvatarTitle(avatarId, username)
-    val rankTitle = stats.getRankTitle()
+    val rankTitle = stringResource(id = stats.getRankTitleRes())
     val badgeIdString = String.format("%05d", abs(username.hashCode()) % 100000)
 
     val totalStars = (1..4).sumOf { stats.getStarsForLevel(it) }

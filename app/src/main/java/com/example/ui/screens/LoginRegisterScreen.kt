@@ -16,6 +16,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -407,6 +409,12 @@ fun LoginRegisterScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF060B12))
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                })
+            }
     ) {
         // 1. Fullscreen Scenic Background from sample_loginscreen.png
         Image(
@@ -573,7 +581,7 @@ fun LoginRegisterScreen(
                             focusManager.clearFocus(force = true)
                             keyboardController?.hide()
                             coroutineScope.launch {
-                                delay(150)
+                                delay(300)
                                 if (selectedTab == 0) {
                                     onLogin(username, password)
                                 } else {
@@ -627,7 +635,7 @@ fun LoginRegisterScreen(
                             focusManager.clearFocus(force = true)
                             keyboardController?.hide()
                             coroutineScope.launch {
-                                delay(150)
+                                delay(300)
                                 if (selectedTab == 0) {
                                     onLogin(username, password)
                                 } else {

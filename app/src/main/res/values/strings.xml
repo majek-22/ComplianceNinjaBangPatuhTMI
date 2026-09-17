@@ -219,6 +219,17 @@
     <string name="difficulty_label">Difficulty:</string>
     <string name="difficulty_normal">Normal</string>
     <string name="difficulty_hard">Hard (1.25x Pts)</string>
+    <string name="level_tier_1">Intern</string>
+    <string name="level_tier_2">Staff</string>
+    <string name="level_tier_3">Manager</string>
+    <string name="level_tier_boss">Chief</string>
+
+    <string name="rank_chief_compliance_ninja">Chief Compliance Ninja</string>
+    <string name="rank_senior_risk_specialist">Senior Risk Specialist</string>
+    <string name="rank_lead_investigator">Lead Investigator</string>
+    <string name="rank_junior_auditor">Junior Auditor</string>
+    <string name="rank_compliance_intern">Compliance Intern</string>
+
     <string name="level_number">LEVEL %1$d</string>
     <string name="level1_name">Internal Controls</string>
     <string name="level1_desc">Learn to identify bribery, fraud, and legitimate approvals under controlled conditions.</string>

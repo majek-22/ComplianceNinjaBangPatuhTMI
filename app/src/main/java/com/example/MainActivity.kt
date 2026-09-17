@@ -1,6 +1,5 @@
 package com.example
 
-import android.app.Activity
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
@@ -40,6 +38,7 @@ import com.example.ui.viewmodel.GamePhase
 import com.example.ui.viewmodel.GameViewModel
 
 class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ComplianceApplication.ensureFirebaseInitialized(application)
@@ -65,25 +64,32 @@ class MainActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            // Give any ongoing IME insets hide animation ample time to finish cleanly before checking insets
-            window.decorView.postDelayed({
-                if (!isFinishing && !isDestroyed) {
-                    val rootInsets = ViewCompat.getRootWindowInsets(window.decorView)
-                    val isImeVisible = rootInsets?.isVisible(WindowInsetsCompat.Type.ime()) == true
-                    if (!isImeVisible) {
-                        hideSystemNavigationBar()
-                    }
-                }
-            }, 600L)
+            hideSystemNavigationBar()
         }
     }
 
     fun hideSystemNavigationBar() {
         val window = window ?: return
-        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        val decorView = window.decorView ?: return
+        val insetsController = WindowCompat.getInsetsController(window, decorView)
         insetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        insetsController.hide(WindowInsetsCompat.Type.systemBars())
+
+        val rootInsets = ViewCompat.getRootWindowInsets(decorView)
+        // If the soft keyboard (IME) is visible or animating, do NOT touch system bars!
+        val isImeVisible = rootInsets?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        if (isImeVisible) {
+            return
+        }
+
+        // Only request hide if navigation bars or status bars are currently showing
+        val areBarsVisible = rootInsets == null ||
+            rootInsets.isVisible(WindowInsetsCompat.Type.navigationBars()) ||
+            rootInsets.isVisible(WindowInsetsCompat.Type.statusBars())
+
+        if (areBarsVisible) {
+            insetsController.hide(WindowInsetsCompat.Type.systemBars())
+        }
     }
 }
 
@@ -96,11 +102,6 @@ fun ComplianceSlicerApp(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val activity = context as? MainActivity
-
-    // Hide navigation bar on phase changes
-    LaunchedEffect(uiState.phase) {
-        activity?.hideSystemNavigationBar()
-    }
 
     // Background music lifecycle & screen transition management
     LaunchedEffect(uiState.phase, uiState.isAudioMuted) {
@@ -129,7 +130,6 @@ fun ComplianceSlicerApp(
                     viewModel.musicManager.pause()
                 }
                 Lifecycle.Event.ON_RESUME -> {
-                    activity?.hideSystemNavigationBar()
                     if (!uiState.isAudioMuted) {
                         when (uiState.phase) {
                             GamePhase.PLAYING -> viewModel.musicManager.playGameplayTrack()

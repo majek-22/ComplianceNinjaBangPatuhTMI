@@ -219,6 +219,17 @@
     <string name="difficulty_label">難易度:</string>
     <string name="difficulty_normal">ノーマル</string>
     <string name="difficulty_hard">ハード (1.25倍)</string>
+    <string name="level_tier_1">インターン</string>
+    <string name="level_tier_2">スタッフ</string>
+    <string name="level_tier_3">マネージャー</string>
+    <string name="level_tier_boss">チーフ</string>
+
+    <string name="rank_chief_compliance_ninja">チーフ・コンプライアンス忍者</string>
+    <string name="rank_senior_risk_specialist">シニア・リスクスペシャリスト</string>
+    <string name="rank_lead_investigator">主任調査員</string>
+    <string name="rank_junior_auditor">ジュニア監査員</string>
+    <string name="rank_compliance_intern">コンプライアンス・インターン</string>
+
     <string name="level_number">レベル %1$d</string>
     <string name="level1_name">内部統制</string>
     <string name="level1_desc">基礎訓練環境で贈収賄、不正、正規決裁の判別方法を習得します。</string>

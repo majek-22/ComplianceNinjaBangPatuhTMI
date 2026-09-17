@@ -759,24 +759,36 @@ private fun CampaignLevelNode(
                     )
                 }
             }
+        }
 
-            // Sector Banner Ribbon at top
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-4).dp),
-                shape = RoundedCornerShape(6.dp),
-                color = if (isSelected) accentColor else Color(0xDD0D1B2A),
-                border = androidx.compose.foundation.BorderStroke(0.8.dp, accentColor)
-            ) {
-                Text(
-                    text = if (isBoss) "BOSS" else "L${level.levelNumber}",
-                    color = if (isSelected) Color(0xFF09131F) else Color.White,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                )
-            }
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Level Tier Title placed directly above the Stars for clear readability
+        val tierText = when (level.levelNumber) {
+            1 -> stringResource(R.string.level_tier_1)
+            2 -> stringResource(R.string.level_tier_2)
+            3 -> stringResource(R.string.level_tier_3)
+            else -> stringResource(R.string.level_tier_boss)
+        }
+
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = if (isSelected) accentColor else Color(0xEE0B1728),
+            border = androidx.compose.foundation.BorderStroke(
+                width = if (isSelected) 1.5.dp else 1.dp,
+                color = if (isSelected) accentColor else accentColor.copy(alpha = 0.75f)
+            ),
+            shadowElevation = if (isSelected) 4.dp else 1.dp
+        ) {
+            Text(
+                text = tierText,
+                color = if (isSelected) Color(0xFF09131F) else Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.5.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.5.dp)
+            )
         }
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -839,17 +851,23 @@ private fun MissionDeploymentConsole(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    val tierName = when (level.levelNumber) {
+                        1 -> stringResource(R.string.level_tier_1)
+                        2 -> stringResource(R.string.level_tier_2)
+                        3 -> stringResource(R.string.level_tier_3)
+                        else -> stringResource(R.string.level_tier_boss)
+                    }
                     val sectorBadge = if (isBoss) {
                         when (currentLanguage.lowercase()) {
-                            "ja" -> "最終セクター"
-                            "in", "id" -> "SEKTOR FINAL"
-                            else -> "FINAL SECTOR"
+                            "ja" -> "最終セクター • $tierName"
+                            "in", "id" -> "SEKTOR FINAL • $tierName"
+                            else -> "FINAL SECTOR • $tierName"
                         }
                     } else {
                         when (currentLanguage.lowercase()) {
-                            "ja" -> "セクター ${level.levelNumber}"
-                            "in", "id" -> "SEKTOR ${level.levelNumber}"
-                            else -> "SECTOR ${level.levelNumber}"
+                            "ja" -> "セクター ${level.levelNumber} • $tierName"
+                            "in", "id" -> "SEKTOR ${level.levelNumber} • $tierName"
+                            else -> "SECTOR ${level.levelNumber} • $tierName"
                         }
                     }
                     Text(

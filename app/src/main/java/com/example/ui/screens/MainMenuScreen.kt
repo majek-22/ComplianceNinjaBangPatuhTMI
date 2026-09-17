@@ -1263,12 +1263,12 @@ private fun StartShiftGlowingButton(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Sword slash icon
+                // Samurai Katana Sword slice icon
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_sword_slash),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    painter = painterResource(id = R.drawable.ic_katana_slice),
+                    contentDescription = "Katana Slice",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(28.dp)
                 )
 
                 Spacer(modifier = Modifier.width(10.dp))

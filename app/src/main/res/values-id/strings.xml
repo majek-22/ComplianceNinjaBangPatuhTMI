@@ -219,6 +219,17 @@
     <string name="difficulty_label">Tingkat Kesulitan:</string>
     <string name="difficulty_normal">Normal</string>
     <string name="difficulty_hard">Sulit (Bonus Poin 1.25x)</string>
+    <string name="level_tier_1">Magang</string>
+    <string name="level_tier_2">Staf</string>
+    <string name="level_tier_3">Manajer</string>
+    <string name="level_tier_boss">Pimpinan</string>
+
+    <string name="rank_chief_compliance_ninja">Pimpinan Ninja Kepatuhan</string>
+    <string name="rank_senior_risk_specialist">Spesialis Risiko Senior</string>
+    <string name="rank_lead_investigator">Ketua Investigasi</string>
+    <string name="rank_junior_auditor">Auditor Junior</string>
+    <string name="rank_compliance_intern">Magang Kepatuhan</string>
+
     <string name="level_number">LEVEL %1$d</string>
     <string name="level1_name">Pengendalian Internal</string>
     <string name="level1_desc">Pelajari mengenali suap, kecurangan, dan persetujuan yang sah dalam kondisi terkontrol.</string>

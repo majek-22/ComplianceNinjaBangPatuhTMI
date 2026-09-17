@@ -507,7 +507,11 @@ private fun MyStatsTab(
     val stats = userStats ?: UserStats(username = currentUser ?: "Officer")
     val userRank = leaderboardEntries.find { it.username.equals(currentUser, ignoreCase = true) }?.rank
     val avatarRes = AvatarHelper.getAvatarRes(stats.avatarId, stats.username)
-    val rankTitle = stats.getRankTitle()
+    val rankTitle = when (currentLanguage.lowercase()) {
+        "ja" -> stats.getRankTitle("ja")
+        "in", "id" -> stats.getRankTitle("in")
+        else -> stringResource(id = stats.getRankTitleRes())
+    }
 
     Column(
         modifier = Modifier
