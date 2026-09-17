@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,6 +63,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.LanguageDropdownMenu
 import androidx.compose.runtime.Composable
@@ -838,79 +840,79 @@ private fun ComplianceRulesTable(
         LazyRow(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
         ) {
             // Scroll 1: SLICE — Violations (Tebas Pelanggaran)
             item {
                 NinjaMissionScrollCard(
-                    headerTitle = "⚔️ " + stringResource(R.string.menu_slice_violations_header),
-                    headerColor = Color(0xFFFFC857),
-                    containerBorder = Color(0x66FFC857),
-                    discBgColor = Color(0xFF3E2805),
+                    headerTitle = stringResource(R.string.menu_slice_violations_header).replace("—", "-"),
+                    headerIconRes = R.drawable.ic_crossed_katanas_gold,
+                    headerPlaqueColors = listOf(Color(0xFF7D0827), Color(0xFF560219), Color(0xFF7D0827)),
+                    bgImageRes = R.drawable.bg_ninja_scroll,
                     items = violationEntries.map {
                         RuleItemData(
                             iconRes = it.iconRes,
                             name = stringResource(it.nameRes)
                         )
                     },
-                    modifier = Modifier.width(188.dp)
+                    modifier = Modifier.width(205.dp)
                 )
             }
 
             // Scroll 2: PROTECT — Legitimate (Lindungi Dokumen Sah)
             item {
                 NinjaMissionScrollCard(
-                    headerTitle = "🛡️ " + stringResource(R.string.menu_protect_legitimate_header),
-                    headerColor = Color(0xFF64B5F6),
-                    containerBorder = Color(0x6664B5F6),
-                    discBgColor = Color(0xFF0C2C4D),
+                    headerTitle = stringResource(R.string.menu_protect_legitimate_header).replace("—", "-"),
+                    headerIconRes = R.drawable.ic_laurel_shield,
+                    headerPlaqueColors = listOf(Color(0xFF0F2E52), Color(0xFF07192E), Color(0xFF0F2E52)),
+                    bgImageRes = R.drawable.bg_ninja_scroll_blue,
                     items = legitimateEntries.map {
                         RuleItemData(
                             iconRes = it.iconRes,
                             name = stringResource(it.nameRes)
                         )
                     },
-                    modifier = Modifier.width(188.dp)
+                    modifier = Modifier.width(205.dp)
                 )
             }
 
             // Scroll 3: AVOID — Traps (Hindari Jebakan)
             item {
                 NinjaMissionScrollCard(
-                    headerTitle = "⚠️ " + stringResource(R.string.menu_avoid_legitimate_header),
-                    headerColor = Color(0xFFFF5252),
-                    containerBorder = Color(0x66FF5252),
-                    discBgColor = Color(0xFF3E0E0E),
+                    headerTitle = stringResource(R.string.menu_avoid_legitimate_header).replace("—", "-"),
+                    headerIconRes = R.drawable.ic_scroll_hazard,
+                    headerPlaqueColors = listOf(Color(0xFF6B180A), Color(0xFF400A03), Color(0xFF6B180A)),
+                    bgImageRes = R.drawable.bg_ninja_scroll_crimson,
                     items = trapEntries.map {
                         RuleItemData(
                             iconRes = it.iconRes,
                             name = stringResource(it.nameRes)
                         )
                     },
-                    modifier = Modifier.width(188.dp)
+                    modifier = Modifier.width(205.dp)
                 )
             }
 
             // Scroll 4: COLLECT — Bonus (Kumpulkan Bonus)
             item {
                 NinjaMissionScrollCard(
-                    headerTitle = "💎 " + stringResource(R.string.menu_collect_bonus_header),
-                    headerColor = Color(0xFF00E676),
-                    containerBorder = Color(0x6600E676),
-                    discBgColor = Color(0xFF052F1A),
+                    headerTitle = stringResource(R.string.menu_collect_bonus_header).replace("—", "-"),
+                    headerIconRes = R.drawable.ic_scroll_bonus_gem,
+                    headerPlaqueColors = listOf(Color(0xFF0B3D23), Color(0xFF042011), Color(0xFF0B3D23)),
+                    bgImageRes = R.drawable.bg_ninja_scroll_green,
                     items = bonusEntries.map {
                         RuleItemData(
                             iconRes = it.iconRes,
                             name = stringResource(it.nameRes)
                         )
                     },
-                    modifier = Modifier.width(188.dp)
+                    modifier = Modifier.width(205.dp)
                 )
             }
         }
 
-        // Drag Indicator Bar & Strictly 2 Dot Indicators (..) for single drag navigation
+        // Drag Indicator Bar & 4 Dot Indicators for all 4 Mission Scrolls
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -928,25 +930,21 @@ private fun ComplianceRulesTable(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Strictly 2 dots (..) for single left/right drag
-            val isSecondPage = listState.firstVisibleItemIndex >= 1
+            val activeScrollPage = listState.firstVisibleItemIndex.coerceIn(0, 3)
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(if (!isSecondPage) 7.dp else 5.dp)
-                        .clip(CircleShape)
-                        .background(if (!isSecondPage) Color(0xFFFFD54F) else Color(0x44FFFFFF))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(if (isSecondPage) 7.dp else 5.dp)
-                        .clip(CircleShape)
-                        .background(if (isSecondPage) Color(0xFFFFD54F) else Color(0x44FFFFFF))
-                )
+                for (pageIndex in 0..3) {
+                    val isActive = activeScrollPage == pageIndex
+                    Box(
+                        modifier = Modifier
+                            .size(if (isActive) 7.5.dp else 5.dp)
+                            .clip(CircleShape)
+                            .background(if (isActive) Color(0xFFFFD54F) else Color(0x44FFFFFF))
+                    )
+                }
             }
         }
     }
@@ -955,131 +953,359 @@ private fun ComplianceRulesTable(
 private data class RuleItemData(val iconRes: Int, val name: String)
 
 /**
- * Top/Bottom wooden roller bar with polished mahogany wood grain and golden brass end knobs (Jikugi)
+ * Authentic Japanese Makimono Wooden Roller Rod (Jikugi):
+ * Cylindrical dark mahogany wood rod, gold flanged end caps,
+ * center silk braided cord wrap (top roller), and hanging red silk tassels (Fusahimo).
  */
 @Composable
 private fun NinjaScrollRoller(
     isTop: Boolean,
-    accentColor: Color,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(13.dp),
-        contentAlignment = Alignment.Center
+            .height(28.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Main wooden rod spanning horizontally
+        // Main cylindrical wooden roller rod spanning horizontally
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .height(9.dp)
-                .clip(RoundedCornerShape(3.dp))
+                .fillMaxWidth(0.96f)
+                .height(13.dp)
+                .clip(RoundedCornerShape(4.dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF6D4C41),
-                            Color(0xFF8D6E63),
-                            Color(0xFF4E342E),
-                            Color(0xFF27150E)
+                            Color(0xFF5B1208),
+                            Color(0xFF8E210F),
+                            Color(0xFFAA2A14),
+                            Color(0xFF6B1408),
+                            Color(0xFF380702)
                         )
                     )
                 )
                 .border(
-                    width = 0.5.dp,
-                    color = Color(0x88FFA726),
-                    shape = RoundedCornerShape(3.dp)
+                    width = 0.8.dp,
+                    color = Color(0x77FFA726),
+                    shape = RoundedCornerShape(4.dp)
                 )
         )
 
-        // Left gold knob (Jikugi)
+        // Left gold end cap (Jikugi)
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(width = 9.dp, height = 13.dp)
+                .align(Alignment.TopStart)
+                .size(width = 13.dp, height = 15.dp)
                 .clip(RoundedCornerShape(3.dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFFFE082),
+                            Color(0xFFFFF176),
+                            Color(0xFFFFD54F),
                             Color(0xFFFFB300),
-                            Color(0xFFE65100),
-                            Color(0xFFBF360C)
+                            Color(0xFFE65100)
                         )
                     )
                 )
-                .border(0.5.dp, Color(0xFFFFF9C4), RoundedCornerShape(3.dp))
+                .border(0.6.dp, Color(0xFFFFF9C4), RoundedCornerShape(3.dp))
         )
 
-        // Right gold knob (Jikugi)
+        // Right gold end cap (Jikugi)
         Box(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .size(width = 9.dp, height = 13.dp)
+                .align(Alignment.TopEnd)
+                .size(width = 13.dp, height = 15.dp)
                 .clip(RoundedCornerShape(3.dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFFFE082),
+                            Color(0xFFFFF176),
+                            Color(0xFFFFD54F),
                             Color(0xFFFFB300),
-                            Color(0xFFE65100),
-                            Color(0xFFBF360C)
+                            Color(0xFFE65100)
                         )
                     )
                 )
-                .border(0.5.dp, Color(0xFFFFF9C4), RoundedCornerShape(3.dp))
+                .border(0.6.dp, Color(0xFFFFF9C4), RoundedCornerShape(3.dp))
         )
 
-        // Center red silk cord knot on top roller
+        // Left Hanging Red Silk Tassel (Fusahimo)
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 2.dp, y = 13.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Gold bead ring
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFFD54F))
+            )
+            // Braided red silk cord
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(4.dp)
+                    .background(Color(0xFFC62828))
+            )
+            // Tassel gold neck band
+            Box(
+                modifier = Modifier
+                    .size(width = 5.dp, height = 2.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(Color(0xFFFFB300))
+            )
+            // Flared red silk tassel skirt
+            Box(
+                modifier = Modifier
+                    .size(width = 7.dp, height = 9.dp)
+                    .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFFD32F2F), Color(0xFFB71C1C), Color(0xFF7F0000))
+                        )
+                    )
+            )
+        }
+
+        // Right Hanging Red Silk Tassel (Fusahimo)
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-2).dp, y = 13.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Gold bead ring
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFFD54F))
+            )
+            // Braided red silk cord
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(4.dp)
+                    .background(Color(0xFFC62828))
+            )
+            // Tassel gold neck band
+            Box(
+                modifier = Modifier
+                    .size(width = 5.dp, height = 2.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(Color(0xFFFFB300))
+            )
+            // Flared red silk tassel skirt
+            Box(
+                modifier = Modifier
+                    .size(width = 7.dp, height = 9.dp)
+                    .clip(RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFFD32F2F), Color(0xFFB71C1C), Color(0xFF7F0000))
+                        )
+                    )
+            )
+        }
+
+        // Center Red Silk Cord Wrapping with Gold Binding Rings on Top Roller
         if (isTop) {
             Box(
                 modifier = Modifier
-                    .size(width = 16.dp, height = 7.dp)
+                    .align(Alignment.TopCenter)
+                    .size(width = 22.dp, height = 13.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFFD50000))
-                    .border(0.5.dp, Color(0xFFFFD54F), RoundedCornerShape(2.dp))
-            )
+                    .background(Color(0xFFC62828)),
+                contentAlignment = Alignment.Center
+            ) {
+                // Triple golden binding cord wraps
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(1.5.dp)
+                            .fillMaxHeight()
+                            .background(Color(0xFFFFD54F))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(1.5.dp)
+                            .fillMaxHeight()
+                            .background(Color(0xFFFFD54F))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(1.5.dp)
+                            .fillMaxHeight()
+                            .background(Color(0xFFFFD54F))
+                    )
+                }
+            }
         }
     }
 }
 
 /**
  * Authentic Ninja Mission Scroll Card (Makimono):
- * Features top and bottom wooden scroll roller rods with gold end caps,
- * aged rice parchment texture, brocade border ribbons, and traditional mission directives.
+ * Replicates the authentic Japanese scroll style:
+ * - Cylindrical mahogany wooden rollers with gold end knobs & hanging red silk tassels
+ * - Golden antique parchment paper (Honshi)
+ * - Crimson & gold brocade mounting ribbons on left/right vertical borders
+ * - Ornate royal lacquer plaque with golden border, corner rivets, and icon
+ * - Large authentic 3D PNG icons on soft parchment strips with crisp sumi ink typography
  */
 @Composable
 private fun NinjaMissionScrollCard(
     headerTitle: String,
-    headerColor: Color,
-    containerBorder: Color,
-    discBgColor: Color,
+    headerIconRes: Int,
+    headerPlaqueColors: List<Color>,
     items: List<RuleItemData>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    bgImageRes: Int? = null
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    if (bgImageRes != null) {
+        // Render scroll using uploaded bg_ninja_scroll with dynamic title, icons, and names overlaid on parchment
+        BoxWithConstraints(
+            modifier = modifier,
+            contentAlignment = Alignment.TopCenter
+        ) {
+            val cardWidth = maxWidth
+            val cardHeight = maxWidth * (1402f / 1122f)
+
+            // Scaled font and icon sizing based on card width (referenced to standard 240dp)
+            val scaleFactor = (cardWidth.value / 240f).coerceIn(0.7f, 1.8f)
+            val titleFontSize = (10.5f * scaleFactor).sp
+            val titleIconSize = (14f * scaleFactor).dp
+            val itemFontSize = (9.5f * scaleFactor).sp
+            val itemIconSize = (22f * scaleFactor).dp
+
+            Box(
+                modifier = Modifier
+                    .width(cardWidth)
+                    .height(cardHeight)
+            ) {
+                // Authentic Makimono background illustration
+                Image(
+                    painter = painterResource(id = bgImageRes),
+                    contentDescription = headerTitle,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+
+                // 1. Lacquer Plaque Header Title: positioned precisely inside the plaque (13.0% to 21.5% of total height)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = cardHeight * 0.130f,
+                            start = cardWidth * 0.165f,
+                            end = cardWidth * 0.165f
+                        )
+                        .height(cardHeight * 0.085f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = headerIconRes),
+                            contentDescription = null,
+                            modifier = Modifier.size(titleIconSize),
+                            contentScale = ContentScale.Fit
+                        )
+
+                        Spacer(modifier = Modifier.width((4.5f * scaleFactor).dp))
+
+                        Text(
+                            text = headerTitle,
+                            color = Color.White,
+                            fontSize = titleFontSize,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontFamily = FontFamily.SansSerif,
+                            letterSpacing = 0.4.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // 2. Parchment Items Column: positioned strictly within parchment body (24.0% to 85.0% of total height)
+                // Arranged from the top with consistent compact row height and item spacing across all scrolls
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = cardHeight * 0.245f,
+                            start = cardWidth * 0.155f,
+                            end = cardWidth * 0.155f
+                        )
+                        .height(cardHeight * 0.605f),
+                    verticalArrangement = Arrangement.spacedBy((5f * scaleFactor).dp, Alignment.Top)
+                ) {
+                    for (item in items) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape((5f * scaleFactor).dp))
+                                .background(Color(0x35FFF8EA))
+                                .border((0.6f * scaleFactor).dp, Color(0x38B08953), RoundedCornerShape((5f * scaleFactor).dp))
+                                .padding(
+                                    horizontal = (6f * scaleFactor).dp,
+                                    vertical = (2f * scaleFactor).dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Violation / Item Icon
+                            Image(
+                                painter = painterResource(id = item.iconRes),
+                                contentDescription = item.name,
+                                modifier = Modifier.size(itemIconSize),
+                                contentScale = ContentScale.Fit
+                            )
+
+                            Spacer(modifier = Modifier.width((6.5f * scaleFactor).dp))
+
+                            // Item Name in Sumi Ink
+                            Text(
+                                text = item.name,
+                                color = Color(0xFF1F160E),
+                                fontSize = itemFontSize,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = FontFamily.SansSerif,
+                                letterSpacing = 0.1.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         // Top Wooden Scroll Roller
-        NinjaScrollRoller(isTop = true, accentColor = headerColor)
+        NinjaScrollRoller(isTop = true)
 
         // Unrolled Parchment Body (Honshi)
         Surface(
-            modifier = Modifier.fillMaxWidth(0.96f),
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .offset(y = (-13).dp),
             shape = RoundedCornerShape(2.dp),
-            color = Color(0xFF1A110B),
-            border = BorderStroke(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(
-                        headerColor.copy(alpha = 0.65f),
-                        Color(0xFF5D4037),
-                        headerColor.copy(alpha = 0.65f)
-                    )
-                )
-            ),
-            shadowElevation = 6.dp
+            color = Color(0xFFFFF8EA),
+            border = BorderStroke(1.dp, Color(0x66B08953)),
+            shadowElevation = 8.dp
         ) {
             Box(
                 modifier = Modifier
@@ -1087,99 +1313,182 @@ private fun NinjaMissionScrollCard(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFF261912),
-                                Color(0xFF1D120B),
-                                Color(0xFF150C07)
+                                Color(0xFFFFF8EB),
+                                Color(0xFFFEEDD6),
+                                Color(0xFFF9DEC0),
+                                Color(0xFFF3CFA0),
+                                Color(0xFFE9BF84)
                             )
                         )
                     )
             ) {
-                // Traditional Japanese brocade fabric borders along edges
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .width(3.dp)
-                            .height(180.dp)
-                            .background(headerColor.copy(alpha = 0.40f))
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Box(
-                        modifier = Modifier
-                            .width(3.dp)
-                            .height(180.dp)
-                            .background(headerColor.copy(alpha = 0.40f))
-                    )
-                }
-
-                // Inner parchment mission content
-                Column(
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                // Red & Gold Brocade Mounting Edge Ribbons on Left and Right
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .matchParentSize(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Mission Placard Header (Scroll Seal Banner)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        headerColor.copy(alpha = 0.28f),
-                                        Color(0x33000000),
-                                        headerColor.copy(alpha = 0.28f)
+                    // Left Brocade Ribbon + Gold Trim
+                    Row(modifier = Modifier.fillMaxHeight()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(5.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xFF6F0913), Color(0xFF8E111C), Color(0xFFA81C2A))
                                     )
                                 )
-                            )
-                            .border(1.dp, headerColor.copy(alpha = 0.75f), RoundedCornerShape(6.dp))
-                            .padding(vertical = 3.dp, horizontal = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = headerTitle,
-                            color = headerColor,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.3.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(1.dp)
+                                .background(Color(0xFFFFD54F))
                         )
                     }
 
-                    // Target entries listed on mission parchment
+                    // Right Gold Trim + Brocade Ribbon
+                    Row(modifier = Modifier.fillMaxHeight()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(1.dp)
+                                .background(Color(0xFFFFD54F))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(5.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xFFA81C2A), Color(0xFF8E111C), Color(0xFF6F0913))
+                                    )
+                                )
+                        )
+                    }
+                }
+
+                // Inner Scroll Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 9.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // Ornate Header Plaque (Royal Lacquer Plaque with Golden Rim & Corner Rivets)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Brush.verticalGradient(headerPlaqueColors))
+                            .border(
+                                BorderStroke(
+                                    2.dp,
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xFFFFE082), Color(0xFFFFD54F), Color(0xFFFFB300), Color(0xFFFFE082))
+                                    )
+                                ),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        // 4 Golden Corner Rivets / Studs
+                        // Top-Start
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFE082))
+                                .border(0.5.dp, Color(0xFF5D4037), CircleShape)
+                        )
+                        // Top-End
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFE082))
+                                .border(0.5.dp, Color(0xFF5D4037), CircleShape)
+                        )
+                        // Bottom-Start
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFE082))
+                                .border(0.5.dp, Color(0xFF5D4037), CircleShape)
+                        )
+                        // Bottom-End
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFE082))
+                                .border(0.5.dp, Color(0xFF5D4037), CircleShape)
+                        )
+
+                        // Header Plaque Content: Icon + Title
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = headerIconRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                                contentScale = ContentScale.Fit
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = headerTitle,
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    // Target entries listed on parchment (exact replica of user's image)
                     for (item in items) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0x44000000))
-                                .border(0.5.dp, Color(0x338D6E63), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 5.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(7.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0x80FFF8EA))
+                                .border(0.8.dp, Color(0x66DEBA8C), RoundedCornerShape(10.dp))
+                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Target medallion token disc
-                            Box(
-                                modifier = Modifier
-                                    .size(26.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(discBgColor)
-                                    .border(1.dp, headerColor.copy(alpha = 0.65f), RoundedCornerShape(6.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Image(
-                                    painter = painterResource(id = item.iconRes),
-                                    contentDescription = item.name,
-                                    modifier = Modifier.size(20.dp),
-                                    contentScale = ContentScale.Fit
-                                )
-                            }
+                            // Large 3D Icon displayed directly on parchment
+                            Image(
+                                painter = painterResource(id = item.iconRes),
+                                contentDescription = item.name,
+                                modifier = Modifier.size(38.dp),
+                                contentScale = ContentScale.Fit
+                            )
 
-                            // Mission Target Name
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            // Mission Target Name in Sumi Ink
                             Text(
                                 text = item.name,
-                                color = Color(0xFFF0EBE5),
-                                fontSize = 9.8.sp,
+                                color = Color(0xFF1F160E),
+                                fontSize = 15.5.sp,
                                 fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.2.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -1190,7 +1499,11 @@ private fun NinjaMissionScrollCard(
         }
 
         // Bottom Wooden Scroll Roller
-        NinjaScrollRoller(isTop = false, accentColor = headerColor)
+        NinjaScrollRoller(
+            isTop = false,
+            modifier = Modifier.offset(y = (-13).dp)
+        )
+        }
     }
 }
 
