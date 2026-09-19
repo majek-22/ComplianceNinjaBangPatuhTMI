@@ -4,12 +4,17 @@ import android.app.Activity
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -71,13 +76,19 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -209,7 +220,7 @@ fun GameScreen(
                     viewModel.updateFrame(dt)
 
                     val now = System.nanoTime()
-                    val threshold = 180_000_000L
+                    val threshold = if (uiState.isFreezeActive) 350_000_000L else if (uiState.comboMultiplier >= 4) 280_000_000L else 220_000_000L
                     sliceTrail.removeAll { (now - it.timestampNanos) > threshold }
                 }
             }
@@ -301,11 +312,13 @@ fun GameScreen(
         }
 
         // 2. ACTIVE FLYING ITEMS: Rendered as discrete Compose composables driven by SnapshotStateList
+        val isCombo4xRunning = uiState.comboMultiplier >= 4 || (uiState.activeComboBurst?.count ?: 0) >= 4
         for (item in viewModel.engine.activeItems) {
             key(item.id) {
                 FlyingItemComposable(
                     item = item,
-                    painter = iconPainters[item.category]
+                    painter = iconPainters[item.category],
+                    isCombo4xActive = isCombo4xRunning
                 )
             }
         }
@@ -359,11 +372,9 @@ fun GameScreen(
                                 lastY = curY
                             },
                             onDragEnd = {
-                                sliceTrail.clear()
                                 viewModel.onSliceEnd()
                             },
                             onDragCancel = {
-                                sliceTrail.clear()
                                 viewModel.onSliceEnd()
                             }
                         )
@@ -385,8 +396,12 @@ fun GameScreen(
                 drawFreezeSlices(freezeSlices)
             }
 
-            // Draw active slice trail (enlarged effect if freeze bonus is active)
-            drawSliceTrail(sliceTrail, isFreezeActive = uiState.isFreezeActive)
+            // Draw active slice trail (enlarged effect if freeze bonus is active or combo 4x)
+            drawSliceTrail(
+                points = sliceTrail,
+                isFreezeActive = uiState.isFreezeActive,
+                isCombo4xActive = uiState.comboMultiplier >= 4 || (uiState.activeComboBurst?.count ?: 0) >= 4
+            )
 
             // Draw floating popups
             val popups = viewModel.engine.popups.toList()
@@ -404,6 +419,7 @@ fun GameScreen(
             shieldBonusLives = uiState.shieldBonusLives,
             comboMultiplier = uiState.comboMultiplier,
             elapsedSeconds = uiState.timeRemaining,
+            currentLanguage = uiState.currentLanguage,
             isAudioMuted = uiState.isAudioMuted,
             onToggleAudioMute = { viewModel.toggleAudioMute() },
             isPaused = uiState.isPaused,
@@ -600,6 +616,19 @@ fun GameScreen(
             }
         }
 
+        // FRUIT NINJA COMBO BURST OVERLAY (Exact arcade match to Fruit Ninja screenshot)
+        uiState.activeComboBurst?.let { burst ->
+            key(burst.id) {
+                FruitNinjaComboOverlay(
+                    burst = burst,
+                    currentLanguage = uiState.currentLanguage,
+                    onDismiss = {
+                        viewModel.dismissComboBurst(burst.id)
+                    }
+                )
+            }
+        }
+
         // 4. FULLSCREEN IMPACT FLASH OVERLAY
         uiState.flashOverlayColor?.let { flashColor ->
             Box(
@@ -731,6 +760,7 @@ fun GameScreen(
 private fun FlyingItemComposable(
     item: GameItem,
     painter: Painter?,
+    isCombo4xActive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (painter == null) return
@@ -779,8 +809,14 @@ private fun FlyingItemComposable(
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val r = size.width / 2f
 
-                    // 1. Radiant outer neon aura matching RULES category color
-                    val auraColors = if (item.category.isFreezeBonus) {
+                    // 1. Radiant outer neon aura matching RULES category color (or flaming sunburst if Combo 4x active)
+                    val auraColors = if (isCombo4xActive) {
+                        listOf(
+                            Color(0xFFFF3D00).copy(alpha = 0.90f),
+                            Color(0xFFFFD700).copy(alpha = 0.60f),
+                            Color.Transparent
+                        )
+                    } else if (item.category.isFreezeBonus) {
                         listOf(
                             Color(0xFF00E676).copy(alpha = 0.85f),
                             Color(0xFFFFD700).copy(alpha = 0.45f),
@@ -813,7 +849,7 @@ private fun FlyingItemComposable(
 
                     // Inner soft highlight disc
                     drawCircle(
-                        color = categoryColor.copy(alpha = 0.25f),
+                        color = (if (isCombo4xActive) Color(0xFFFFD700) else categoryColor).copy(alpha = 0.25f),
                         radius = r * 0.88f,
                         center = Offset(r, r)
                     )
@@ -835,33 +871,12 @@ private fun FlyingItemComposable(
                         }
                     }
 
-                    // 4. Accessible, crisp rim border ring matching RULES
+                    // 4. Accessible, crisp rim border ring matching RULES (Molten gold rim if Combo 4x active)
                     drawCircle(
-                        color = categoryColor,
+                        color = if (isCombo4xActive) Color(0xFFFFD700) else categoryColor,
                         radius = r * 0.95f,
                         center = Offset(r, r),
-                        style = Stroke(width = if (item.category.isFreezeBonus) 5f else 3.5f)
-                    )
-                }
-            }
-
-            // Top hit counter badge for freeze bonus corruptor
-            if (item.category.isFreezeBonus && item.bonusHits > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .offset(y = (-14).dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF0C2C4D))
-                        .border(1.5.dp, Color(0xFFFFD700), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "⚡ ${item.bonusHits}x (+${item.bonusHits * 10})",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color(0xFFFFD700)
+                        style = Stroke(width = if (isCombo4xActive || item.category.isFreezeBonus) 5f else 3.5f)
                     )
                 }
             }
@@ -927,6 +942,43 @@ private fun DrawScope.drawSlicedHalves(
         item.x + item.half1OffsetX,
         item.y + item.half1OffsetY
     )
+    val half2Center = Offset(
+        item.x + item.half2OffsetX,
+        item.y + item.half2OffsetY
+    )
+
+    // COMBO 4X SPECIAL VISUAL: Central radiant solar shockwave ring between severed halves
+    if (item.isCombo4xSliced && item.alpha > 0f) {
+        val midX = (half1Center.x + half2Center.x) / 2f
+        val midY = (half1Center.y + half2Center.y) / 2f
+        val sepDist = kotlin.math.hypot(half1Center.x - half2Center.x, half1Center.y - half2Center.y)
+        val shockRadius = item.radius * 0.95f + sepDist * 0.85f
+        val shockAlpha = (item.alpha * 0.80f).coerceIn(0f, 1f)
+
+        // Blazing explosion disc
+        drawCircle(
+            brush = Brush.radialGradient(
+                listOf(
+                    Color(0xFFFFD700).copy(alpha = shockAlpha),
+                    Color(0xFFFF3D00).copy(alpha = shockAlpha * 0.55f),
+                    Color.Transparent
+                ),
+                radius = shockRadius,
+                center = Offset(midX, midY)
+            ),
+            radius = shockRadius,
+            center = Offset(midX, midY)
+        )
+
+        // Golden shockwave ring
+        drawCircle(
+            color = Color(0xFFFFD700).copy(alpha = shockAlpha * 0.95f),
+            radius = shockRadius * 0.82f,
+            center = Offset(midX, midY),
+            style = Stroke(width = 4.5f)
+        )
+    }
+
     drawSlicedHalf(
         center = half1Center,
         rotation = item.rotation + item.halfRotation1,
@@ -939,13 +991,10 @@ private fun DrawScope.drawSlicedHalves(
         dirX = dirX,
         dirY = dirY,
         normX = normX,
-        normY = normY
+        normY = normY,
+        isCombo4x = item.isCombo4xSliced
     )
 
-    val half2Center = Offset(
-        item.x + item.half2OffsetX,
-        item.y + item.half2OffsetY
-    )
     drawSlicedHalf(
         center = half2Center,
         rotation = item.rotation + item.halfRotation2,
@@ -958,7 +1007,8 @@ private fun DrawScope.drawSlicedHalves(
         dirX = dirX,
         dirY = dirY,
         normX = normX,
-        normY = normY
+        normY = normY,
+        isCombo4x = item.isCombo4xSliced
     )
 }
 
@@ -974,7 +1024,8 @@ private fun DrawScope.drawSlicedHalf(
     dirX: Float,
     dirY: Float,
     normX: Float,
-    normY: Float
+    normY: Float,
+    isCombo4x: Boolean = false
 ) {
     if (alpha <= 0f) return
 
@@ -1011,6 +1062,23 @@ private fun DrawScope.drawSlicedHalf(
         else -> Color(0xFF0C2C4D)
     }
 
+    // If Combo 4x: Fiery solar aura behind each severed half
+    if (isCombo4x) {
+        drawCircle(
+            brush = Brush.radialGradient(
+                listOf(
+                    Color(0xFFFF3D00).copy(alpha = alpha * 0.75f),
+                    Color(0xFFFFD700).copy(alpha = alpha * 0.45f),
+                    Color.Transparent
+                ),
+                radius = radius * 1.55f,
+                center = center
+            ),
+            radius = radius * 1.55f,
+            center = center
+        )
+    }
+
     clipPath(clipPath) {
         withTransform({
             translate(left = center.x, top = center.y)
@@ -1018,15 +1086,15 @@ private fun DrawScope.drawSlicedHalf(
         }) {
             val r = radius
 
-            // Colored backing disc matching RULES (not pitch black!)
+            // Colored backing disc matching RULES (or deep ember glow if Combo 4x)
             drawCircle(
-                color = discBgColor.copy(alpha = alpha),
+                color = if (isCombo4x) Color(0xFF3A1200).copy(alpha = alpha) else discBgColor.copy(alpha = alpha),
                 radius = r
             )
 
             // Inner soft highlight disc
             drawCircle(
-                color = categoryColor.copy(alpha = alpha * 0.25f),
+                color = if (isCombo4x) Color(0xFFFF9100).copy(alpha = alpha * 0.35f) else categoryColor.copy(alpha = alpha * 0.25f),
                 radius = r * 0.88f
             )
 
@@ -1044,45 +1112,143 @@ private fun DrawScope.drawSlicedHalf(
                 }
             }
 
-            // High-contrast rim border ring
+            // High-contrast rim border ring (Fiery molten gold if Combo 4x)
             drawCircle(
-                color = categoryColor.copy(alpha = alpha),
+                color = if (isCombo4x) Color(0xFFFFD700).copy(alpha = alpha) else categoryColor.copy(alpha = alpha),
                 radius = r * 0.95f,
-                style = Stroke(width = 3.5f)
+                style = Stroke(width = if (isCombo4x) 5f else 3.5f)
             )
         }
     }
 
-    // Bright laser cut glow along the slice seam
-    val cutLength = radius * 1.05f
-    drawLine(
-        brush = Brush.linearGradient(
-            listOf(
-                Color.White.copy(alpha = alpha * 0.95f),
-                Color(category.glowColor).copy(alpha = alpha * 0.75f)
-            )
-        ),
-        start = Offset(center.x - dirX * cutLength, center.y - dirY * cutLength),
-        end = Offset(center.x + dirX * cutLength, center.y + dirY * cutLength),
-        strokeWidth = 3.5f
-    )
+    // Cut seam effect
+    val cutLength = radius * 1.15f
+    val pStart = Offset(center.x - dirX * cutLength, center.y - dirY * cutLength)
+    val pEnd = Offset(center.x + dirX * cutLength, center.y + dirY * cutLength)
+
+    if (isCombo4x) {
+        // Multi-layer Blazing Plasma Katana Seam
+        // 1. Broad outer fiery flare
+        drawLine(
+            color = Color(0xFFFF3D00).copy(alpha = alpha * 0.85f),
+            start = pStart,
+            end = pEnd,
+            strokeWidth = 14f,
+            cap = StrokeCap.Round
+        )
+        // 2. Molten gold core
+        drawLine(
+            color = Color(0xFFFFD700).copy(alpha = alpha * 0.95f),
+            start = pStart,
+            end = pEnd,
+            strokeWidth = 7f,
+            cap = StrokeCap.Round
+        )
+        // 3. Piercing white heat filament
+        drawLine(
+            color = Color.White.copy(alpha = alpha),
+            start = pStart,
+            end = pEnd,
+            strokeWidth = 2.8f,
+            cap = StrokeCap.Round
+        )
+        // 4. Sparkling star glints at both ends of the seam
+        drawCircle(
+            color = Color.White.copy(alpha = alpha),
+            radius = 5.5f,
+            center = pStart
+        )
+        drawCircle(
+            color = Color(0xFFFFD700).copy(alpha = alpha * 0.9f),
+            radius = 7f,
+            center = pStart,
+            style = Stroke(width = 2f)
+        )
+        drawCircle(
+            color = Color.White.copy(alpha = alpha),
+            radius = 5.5f,
+            center = pEnd
+        )
+        drawCircle(
+            color = Color(0xFFFFD700).copy(alpha = alpha * 0.9f),
+            radius = 7f,
+            center = pEnd,
+            style = Stroke(width = 2f)
+        )
+    } else {
+        // Standard laser cut glow along the slice seam
+        drawLine(
+            brush = Brush.linearGradient(
+                listOf(
+                    Color.White.copy(alpha = alpha * 0.95f),
+                    Color(category.glowColor).copy(alpha = alpha * 0.75f)
+                )
+            ),
+            start = pStart,
+            end = pEnd,
+            strokeWidth = 3.5f
+        )
+    }
 }
 
 private fun DrawScope.drawSliceTrail(
     points: List<SliceTrailPoint>,
-    isFreezeActive: Boolean = false
+    isFreezeActive: Boolean = false,
+    isCombo4xActive: Boolean = false
 ) {
     if (points.size < 2) return
 
     val now = System.nanoTime()
-    val maxAgeNanos = if (isFreezeActive) 350_000_000L else 220_000_000L
+    val maxAgeNanos = when {
+        isCombo4xActive -> 460_000_000L
+        isFreezeActive -> 350_000_000L
+        else -> 220_000_000L
+    }
 
-    // In freeze mode, slice effect is larger with glowing aura
-    val outerWidth = if (isFreezeActive) 36f else 22f
-    val midWidth = if (isFreezeActive) 18f else 10f
-    val coreWidth = if (isFreezeActive) 8f else 4.5f
+    // Determine color palette based on active state:
+    // Combo 4x: Legendary Solar Magma & Dragon Fire blade with radiant gold highlights
+    // Freeze: Glacial cyber cyan & diamond aurora
+    // Normal: Vibrant crimson katana with gold corona
+    val outerColor = when {
+        isCombo4xActive -> Color(0xFFFF1E00)
+        isFreezeActive -> Color(0xFF00E5FF)
+        else -> Color(0xFFFF3B30)
+    }
+    val midColor = when {
+        isCombo4xActive -> Color(0xFFFF9D00)
+        isFreezeActive -> Color(0xFF80D8FF)
+        else -> Color(0xFFFF9800)
+    }
+    val innerColor = when {
+        isCombo4xActive -> Color(0xFFFFEA00)
+        isFreezeActive -> Color(0xFFE0F7FA)
+        else -> Color(0xFFFFF59D)
+    }
 
-    for (i in 0 until points.size - 1) {
+    // Multi-tier stroke widths (wider for Combo 4x and Freeze)
+    val baseOuterWidth = when {
+        isCombo4xActive -> 64f
+        isFreezeActive -> 40f
+        else -> 30f
+    }
+    val baseMidWidth = when {
+        isCombo4xActive -> 34f
+        isFreezeActive -> 20f
+        else -> 14f
+    }
+    val baseInnerWidth = when {
+        isCombo4xActive -> 16f
+        isFreezeActive -> 10f
+        else -> 7f
+    }
+    val baseCoreWidth = when {
+        isCombo4xActive -> 8f
+        isFreezeActive -> 5.5f
+        else -> 4f
+    }
+
+    val pointCount = points.size
+    for (i in 0 until pointCount - 1) {
         val p1 = points[i]
         val p2 = points[i + 1]
 
@@ -1090,34 +1256,162 @@ private fun DrawScope.drawSliceTrail(
         val progress = 1.0f - (age.toFloat() / maxAgeNanos).coerceIn(0f, 1f)
         if (progress <= 0f) continue
 
-        val auraColor = if (isFreezeActive) Color(0xFF00E5FF) else Color(0xFFFF3B30)
-        val midColor = if (isFreezeActive) Color(0xFFFFD54F) else Color(0xFFFF9800)
+        // Katana tapering profile along the stroke (crescent blade dynamics)
+        val indexFraction = (i + 1).toFloat() / (pointCount - 1).coerceAtLeast(1)
+        val taper = when {
+            indexFraction > 0.85f -> 0.45f + (1f - indexFraction) * 3.6f
+            else -> 0.2f + 0.8f * (indexFraction / 0.85f)
+        }.coerceIn(0.15f, 1.0f)
 
-        // 1. Fiery red / electric cyan outer bloom aura
+        val strokeScale = progress * taper
+
+        // COMBO 4X BONUS: Dancing flame envelope wave along the cutting edge
+        if (isCombo4xActive) {
+            val wavePhase = (now / 70_000_000L).toFloat() + i * 0.9f
+            val flameOffset = kotlin.math.sin(wavePhase.toDouble()).toFloat() * 7f * progress
+            drawLine(
+                color = Color(0xFFFF3D00).copy(alpha = 0.45f * progress),
+                start = Offset(p1.x + flameOffset, p1.y - flameOffset * 0.4f),
+                end = Offset(p2.x + flameOffset, p2.y - flameOffset * 0.4f),
+                strokeWidth = baseOuterWidth * 1.25f * strokeScale,
+                cap = StrokeCap.Round
+            )
+        }
+
+        // 1. Broad outer atmospheric bloom aura
         drawLine(
-            color = auraColor.copy(alpha = (if (isFreezeActive) 0.65f else 0.45f) * progress),
+            color = outerColor.copy(alpha = (if (isCombo4xActive) 0.72f else if (isFreezeActive) 0.60f else 0.45f) * progress),
             start = Offset(p1.x, p1.y),
             end = Offset(p2.x, p2.y),
-            strokeWidth = outerWidth * progress,
+            strokeWidth = baseOuterWidth * strokeScale,
             cap = StrokeCap.Round
         )
 
-        // 2. Vibrant orange-gold mid streak
+        // 2. High-saturation energy corona streak
         drawLine(
-            color = midColor.copy(alpha = 0.90f * progress),
+            color = midColor.copy(alpha = (if (isCombo4xActive) 0.98f else 0.90f) * progress),
             start = Offset(p1.x, p1.y),
             end = Offset(p2.x, p2.y),
-            strokeWidth = midWidth * progress,
+            strokeWidth = baseMidWidth * strokeScale,
             cap = StrokeCap.Round
         )
 
-        // 3. Razor-sharp blazing white core
+        // 3. Radiant inner incandescent blade body
+        drawLine(
+            color = innerColor.copy(alpha = 0.98f * progress),
+            start = Offset(p1.x, p1.y),
+            end = Offset(p2.x, p2.y),
+            strokeWidth = baseInnerWidth * strokeScale,
+            cap = StrokeCap.Round
+        )
+
+        // 4. Razor-sharp blazing white diamond core spine
         drawLine(
             color = Color.White.copy(alpha = 1.0f * progress),
             start = Offset(p1.x, p1.y),
             end = Offset(p2.x, p2.y),
-            strokeWidth = coreWidth * progress,
+            strokeWidth = baseCoreWidth * strokeScale,
             cap = StrokeCap.Round
+        )
+
+        // 5. Tactile micro slash sparks & rising fire embers along dynamic fast segments
+        val dx = p2.x - p1.x
+        val dy = p2.y - p1.y
+        val distSq = dx * dx + dy * dy
+        if (distSq > 80f) {
+            val len = kotlin.math.sqrt(distSq).coerceAtLeast(1f)
+            val perpX = -dy / len
+            val perpY = dx / len
+            val side = if (i % 2 == 0) 1f else -1f
+            val sparkOffset = side * (baseMidWidth * 0.6f + (i % 4) * 3f)
+            val sparkX = (p1.x + p2.x) / 2f + perpX * sparkOffset
+            val sparkY = (p1.y + p2.y) / 2f + perpY * sparkOffset
+
+            drawCircle(
+                color = if (isCombo4xActive) Color(0xFFFFD700) else innerColor,
+                radius = (if (isCombo4xActive) 4.2f else 2.5f) * progress,
+                center = Offset(sparkX, sparkY)
+            )
+
+            // In Combo 4x mode, add secondary flying fire embers rising upwards
+            if (isCombo4xActive && (i % 2 == 0)) {
+                val riseDist = (1f - progress) * 28f
+                val emberX = (p1.x + p2.x) / 2f - perpX * (sparkOffset * 0.8f)
+                val emberY = (p1.y + p2.y) / 2f - riseDist
+                drawCircle(
+                    color = if (i % 4 == 0) Color(0xFFFF3D00) else Color(0xFFFFAB00),
+                    radius = (2.6f + (i % 3) * 1.2f) * progress,
+                    center = Offset(emberX, emberY)
+                )
+            }
+        }
+    }
+
+    // 6. Brilliant razor katana glint & star flare at the cutting tip (player's finger touch position)
+    val tip = points.last()
+    val tipAge = (now - tip.timestampNanos).coerceAtLeast(0L)
+    val tipProgress = 1.0f - (tipAge.toFloat() / maxAgeNanos).coerceIn(0f, 1f)
+    if (tipProgress > 0.08f) {
+        val glintRadius = if (isCombo4xActive) 38f else 18f
+        val flareColor = if (isCombo4xActive) Color(0xFFFFD700) else outerColor
+
+        // In Combo 4x: Expanding shockwave ring at blade tip
+        if (isCombo4xActive) {
+            drawCircle(
+                color = Color(0xFFFF5722).copy(alpha = 0.45f * tipProgress),
+                radius = glintRadius * 1.35f * tipProgress,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.5f)
+            )
+        }
+
+        // Outer glow halo
+        drawCircle(
+            color = flareColor.copy(alpha = (if (isCombo4xActive) 0.68f else 0.55f) * tipProgress),
+            radius = glintRadius * tipProgress,
+            center = Offset(tip.x, tip.y)
+        )
+
+        // Diamond star flare cross lines (4-point star)
+        val starArm = glintRadius * tipProgress
+        // Horizontal arm
+        drawLine(
+            color = Color.White.copy(alpha = 0.98f * tipProgress),
+            start = Offset(tip.x - starArm, tip.y),
+            end = Offset(tip.x + starArm, tip.y),
+            strokeWidth = if (isCombo4xActive) 4.2f else 2.2f,
+            cap = StrokeCap.Round
+        )
+        // Vertical arm
+        drawLine(
+            color = Color.White.copy(alpha = 0.98f * tipProgress),
+            start = Offset(tip.x, tip.y - starArm),
+            end = Offset(tip.x, tip.y + starArm),
+            strokeWidth = if (isCombo4xActive) 4.2f else 2.2f,
+            cap = StrokeCap.Round
+        )
+
+        // Diagonal cross glints (Combo 4x has extra bright full 8-point sunburst)
+        val diagArm = starArm * if (isCombo4xActive) 0.72f else 0.55f
+        drawLine(
+            color = (if (isCombo4xActive) Color(0xFFFFF9C4) else innerColor).copy(alpha = 0.92f * tipProgress),
+            start = Offset(tip.x - diagArm, tip.y - diagArm),
+            end = Offset(tip.x + diagArm, tip.y + diagArm),
+            strokeWidth = if (isCombo4xActive) 2.6f else 1.6f,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = (if (isCombo4xActive) Color(0xFFFFF9C4) else innerColor).copy(alpha = 0.92f * tipProgress),
+            start = Offset(tip.x - diagArm, tip.y + diagArm),
+            end = Offset(tip.x + diagArm, tip.y - diagArm),
+            strokeWidth = if (isCombo4xActive) 2.6f else 1.6f,
+            cap = StrokeCap.Round
+        )
+
+        // Intense pure white core hot-spot
+        drawCircle(
+            color = Color.White,
+            radius = (if (isCombo4xActive) 8.5f else 4.5f) * tipProgress,
+            center = Offset(tip.x, tip.y)
         )
     }
 }
@@ -1195,12 +1489,18 @@ private fun TopHudBar(
     shieldBonusLives: Int,
     comboMultiplier: Int,
     elapsedSeconds: Float,
+    currentLanguage: String = "en",
     isAudioMuted: Boolean,
     onToggleAudioMute: () -> Unit,
     isPaused: Boolean,
     onTogglePause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val combo4xBadgeText = when {
+        currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4"
+        currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "Kombo x4"
+        else -> "Combo x4"
+    }
     // High-contrast floating HUD bar matching Screen 2
     Box(
         modifier = modifier
@@ -1354,24 +1654,72 @@ private fun TopHudBar(
                     }
                 }
 
-                // Combo Badge (Golden pill x3)
-                if (comboMultiplier > 1) {
+                // Combo Badge: ONLY appears when the player reaches Combo x4 (not shown for x2 or x3)
+                if (comboMultiplier >= 4) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "combo_pulse")
+                    val pulseScale by infiniteTransition.animateFloat(
+                        initialValue = 1.0f,
+                        targetValue = 1.08f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(450, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "combo4x_pulse"
+                    )
+
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color(0x66000000),
-                        border = BorderStroke(1.2.dp, GoldSecondary)
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xEE8A0000),
+                        border = BorderStroke(
+                            1.5.dp,
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFFFFD700), Color(0xFFFF5722), Color(0xFFFFD700))
+                            )
+                        ),
+                        shadowElevation = 8.dp,
+                        modifier = Modifier
+                            .scale(pulseScale)
+                            .shadow(10.dp, RoundedCornerShape(16.dp), spotColor = Color(0xFFFF3D00))
                     ) {
-                        Text(
-                            text = "x$comboMultiplier",
-                            style = TextStyle(
-                                color = GoldSecondary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Black
-                            ),
+                        Box(
                             modifier = Modifier
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                                .testTag("game_combo_badge")
-                        )
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Color(0xFFC62828),
+                                            Color(0xFFE65100),
+                                            Color(0xFFFF8F00)
+                                        )
+                                    )
+                                )
+                                .padding(horizontal = 9.dp, vertical = 3.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "🔥",
+                                    fontSize = 13.sp
+                                )
+                                Text(
+                                    text = combo4xBadgeText,
+                                    style = TextStyle(
+                                        color = Color(0xFFFFFDE7),
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 0.8.sp,
+                                        shadow = Shadow(
+                                            color = Color(0xDD2A0000),
+                                            offset = Offset(2f, 2f),
+                                            blurRadius = 4f
+                                        )
+                                    ),
+                                    modifier = Modifier.testTag("game_combo_badge")
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1457,4 +1805,290 @@ private fun rememberCategoryPainters(): Map<ComplianceCategory, Painter> {
         painters[category] = painterResource(id = category.iconRes)
     }
     return painters
+}
+
+// =========================================================================
+// COMBO 4X BURST EFFECT (LARGE BOLD 3D GOLD TEXT + RADIANT SOLAR AURA)
+// =========================================================================
+
+@Composable
+private fun FruitNinjaComboOverlay(
+    burst: com.example.ui.viewmodel.FruitNinjaComboBurst,
+    currentLanguage: String = "en",
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scaleAnim = remember { Animatable(0.2f) }
+    val rotationAnim = remember { Animatable(-7f) }
+    val alphaAnim = remember { Animatable(0f) }
+    val floatYAnim = remember { Animatable(0f) }
+    val auraScaleAnim = remember { Animatable(0.2f) }
+
+    LaunchedEffect(burst.id) {
+        scaleAnim.snapTo(0.2f)
+        rotationAnim.snapTo(-7f)
+        alphaAnim.snapTo(0f)
+        floatYAnim.snapTo(0f)
+        auraScaleAnim.snapTo(0.2f)
+
+        // Stage 1: Explosive punchy bounce entrance (0 - 200ms)
+        launch {
+            alphaAnim.animateTo(1f, tween(90))
+        }
+        launch {
+            auraScaleAnim.animateTo(
+                targetValue = 1.25f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+            auraScaleAnim.animateTo(1.0f, tween(150))
+        }
+        launch {
+            rotationAnim.animateTo(
+                targetValue = -1.5f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+        }
+        launch {
+            scaleAnim.animateTo(
+                targetValue = 1.25f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            )
+            scaleAnim.animateTo(1.0f, tween(140))
+        }
+
+        // Gentle upward floating drift over hold period
+        launch {
+            floatYAnim.animateTo(-34f, tween(1300, easing = LinearOutSlowInEasing))
+        }
+
+        // Hold visible for player
+        delay(1150)
+
+        // Stage 2: Smooth exit fade-out & slight expand (1150ms - 1450ms)
+        launch {
+            scaleAnim.animateTo(1.18f, tween(300, easing = FastOutSlowInEasing))
+        }
+        launch {
+            alphaAnim.animateTo(0f, tween(280))
+        }
+        delay(300)
+        onDismiss()
+    }
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val density = LocalDensity.current
+        val screenWidthPx = constraints.maxWidth.toFloat()
+        val screenHeightPx = constraints.maxHeight.toFloat()
+
+        // Clamp coordinates safely within screen boundaries so text is never clipped
+        val marginXPx = with(density) { 170.dp.toPx() }
+        val marginYPx = with(density) { 130.dp.toPx() }
+
+        val posX = if (burst.x > 0f) {
+            burst.x.coerceIn(marginXPx, (screenWidthPx - marginXPx).coerceAtLeast(marginXPx))
+        } else {
+            screenWidthPx / 2f
+        }
+        val posY = if (burst.y > 0f) {
+            (burst.y - 15f).coerceIn(marginYPx, (screenHeightPx - marginYPx).coerceAtLeast(marginYPx))
+        } else {
+            screenHeightPx * 0.38f
+        }
+
+        val posXdp = with(density) { posX.toDp() }
+        val posYdp = with(density) { posY.toDp() }
+
+        Box(
+            modifier = Modifier
+                .offset(
+                    x = posXdp - 170.dp,
+                    y = posYdp - 65.dp + floatYAnim.value.dp
+                )
+                .size(340.dp, 130.dp)
+                .graphicsLayer {
+                    scaleX = scaleAnim.value
+                    scaleY = scaleAnim.value
+                    rotationZ = rotationAnim.value
+                    alpha = alphaAnim.value
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            // 1. Radiant Solar Sunburst Aura behind the text
+            Combo4xSunburstAura(
+                modifier = Modifier.fillMaxSize(),
+                auraScale = auraScaleAnim.value
+            )
+
+            // 2. Big, Bold, Clean "Combo x4" 3D Arcade Text (Localized for EN, ID/IN, JA)
+            val displayText = when {
+                currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4"
+                currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "Kombo x4"
+                else -> "Combo x4"
+            }
+            FruitNinja3DText(
+                text = displayText,
+                fontSize = if (currentLanguage.equals("ja", ignoreCase = true)) 50.sp else 58.sp,
+                letterSpacing = 2.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun Combo4xSunburstAura(
+    modifier: Modifier = Modifier,
+    auraScale: Float = 1f
+) {
+    Canvas(modifier = modifier) {
+        val centerX = size.width / 2f
+        val centerY = size.height / 2f
+        val radius = (size.minDimension * 0.48f * auraScale).coerceAtLeast(10f)
+
+        // 1. Soft radiant magma aura
+        drawCircle(
+            brush = Brush.radialGradient(
+                listOf(
+                    Color(0xD8FF6D00),
+                    Color(0x88FFD700),
+                    Color(0x22FFAB00),
+                    Color.Transparent
+                ),
+                center = Offset(centerX, centerY),
+                radius = radius
+            ),
+            radius = radius,
+            center = Offset(centerX, centerY)
+        )
+
+        // 2. Starburst radiant sun rays
+        val rayCount = 12
+        for (i in 0 until rayCount) {
+            val angle = (i * (360f / rayCount)) * (Math.PI / 180f)
+            val rayLen = radius * (1.12f + (i % 3) * 0.22f)
+            val rayEnd = Offset(
+                centerX + (kotlin.math.cos(angle) * rayLen).toFloat(),
+                centerY + (kotlin.math.sin(angle) * rayLen).toFloat()
+            )
+            drawLine(
+                color = Color(0xFFFFD700).copy(alpha = 0.50f),
+                start = Offset(centerX, centerY),
+                end = rayEnd,
+                strokeWidth = 3.2f,
+                cap = StrokeCap.Round
+            )
+        }
+    }
+}
+
+@Composable
+private fun FruitNinja3DText(
+    text: String,
+    fontSize: androidx.compose.ui.unit.TextUnit,
+    letterSpacing: androidx.compose.ui.unit.TextUnit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        // 1. Deep bottom drop shadow (distance 6dp)
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            color = Color(0xFF1E0A00),
+            modifier = Modifier.offset(x = 1.dp, y = 6.dp)
+        )
+
+        // 2. Multi-tier solid 3D extrusion walls (5dp, 4dp, 3dp, 2dp, 1dp)
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            color = Color(0xFF2E1100),
+            modifier = Modifier.offset(y = 5.dp)
+        )
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            color = Color(0xFF421A00),
+            modifier = Modifier.offset(y = 4.dp)
+        )
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            color = Color(0xFF592400),
+            modifier = Modifier.offset(y = 3.dp)
+        )
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            color = Color(0xFF733000),
+            modifier = Modifier.offset(y = 2.dp)
+        )
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            color = Color(0xFF8F3E00),
+            modifier = Modifier.offset(y = 1.dp)
+        )
+
+        // 3. Dark outline rim surrounding the face (8 directions)
+        listOf(
+            Offset(-1.5f, 0f), Offset(1.5f, 0f), Offset(0f, -1.5f), Offset(0f, 1.5f),
+            Offset(-1.2f, -1.2f), Offset(1.2f, -1.2f), Offset(-1.2f, 1.2f), Offset(1.2f, 1.2f)
+        ).forEach { off ->
+            Text(
+                text = text,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Black,
+                letterSpacing = letterSpacing,
+                color = Color(0xFF441C00),
+                modifier = Modifier.offset(x = off.x.dp, y = off.y.dp)
+            )
+        }
+
+        // 4. Bright Golden Face with Vertical Gradient & Top Chamfer Highlight
+        Text(
+            text = text,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Black,
+            letterSpacing = letterSpacing,
+            style = TextStyle(
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color(0xFFFFFFD6), // pure lemon-white specular highlight
+                        Color(0xFFFFF176), // sunny bright gold
+                        Color(0xFFFFD500), // rich golden yellow
+                        Color(0xFFFFAB00), // warm amber gold
+                        Color(0xFFFF6D00)  // deep burnt-orange base
+                    )
+                ),
+                shadow = Shadow(
+                    color = Color(0xCCFFFFFF),
+                    offset = Offset(0f, -1.5f),
+                    blurRadius = 2.5f
+                )
+            )
+        )
+    }
 }

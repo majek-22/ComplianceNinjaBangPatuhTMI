@@ -31,7 +31,8 @@ class GameItem(
     initialHalfRotation2: Float = 0f,
     initialAlpha: Float = 1.0f,
     initialBonusHits: Int = 0,
-    initialIsFrozen: Boolean = false
+    initialIsFrozen: Boolean = false,
+    initialIsCombo4xSliced: Boolean = false
 ) {
     var x: Float by mutableFloatStateOf(initialX)
     var y: Float by mutableFloatStateOf(initialY)
@@ -39,6 +40,7 @@ class GameItem(
     var vy: Float by mutableFloatStateOf(initialVy)
     var rotation: Float by mutableFloatStateOf(initialRotation)
     var sliced: Boolean by mutableStateOf(initialSliced)
+    var isCombo4xSliced: Boolean by mutableStateOf(initialIsCombo4xSliced)
     var sliceAngle: Float by mutableFloatStateOf(initialSliceAngle)
     var half1OffsetX: Float by mutableFloatStateOf(initialHalf1OffsetX)
     var half1OffsetY: Float by mutableFloatStateOf(initialHalf1OffsetY)

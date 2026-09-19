@@ -3,6 +3,13 @@ package com.example.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.shadow
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -714,7 +721,7 @@ private fun CampaignLevelNode(
         // Main Emblem Orb
         Box(
             modifier = Modifier
-                .size(76.dp)
+                .size(60.dp)
                 .scale(pulseScale)
                 .clip(CircleShape)
                 .background(
@@ -783,7 +790,7 @@ private fun CampaignLevelNode(
             Text(
                 text = tierText,
                 color = if (isSelected) Color(0xFF09131F) else Color.White,
-                fontSize = 11.sp,
+                fontSize = 8.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 0.5.sp,
                 textAlign = TextAlign.Center,
@@ -1084,36 +1091,59 @@ private fun MissionDeploymentConsole(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Deploy / Launch Button
+            // Deploy / Launch Button (Localized 3 images: English, Indonesian, Japanese matching Start Shift in MainMenu)
             if (isUnlocked) {
-                Button(
-                    onClick = onDeploy,
+                val startDrawable = when (currentLanguage.lowercase()) {
+                    "ja" -> R.drawable.btn_start_jp
+                    "in", "id" -> R.drawable.btn_start_id
+                    else -> R.drawable.btn_start_eg
+                }
+
+                val startLabel = when (currentLanguage.lowercase()) {
+                    "ja" -> "スタート"
+                    "in", "id" -> "MULAI"
+                    else -> "START"
+                }
+
+                val startInteractionSource = remember { MutableInteractionSource() }
+                val isStartPressed by startInteractionSource.collectIsPressedAsState()
+                val isStartHovered by startInteractionSource.collectIsHoveredAsState()
+
+                val targetStartInteractiveScale = when {
+                    isStartPressed -> 1.05f
+                    isStartHovered -> 1.03f
+                    else -> 1.0f
+                }
+
+                val startInteractiveScale by animateFloatAsState(
+                    targetValue = targetStartInteractiveScale,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    label = "mission_start_btn_scale"
+                )
+
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(64.dp)
+                        .scale(startInteractiveScale)
+                        .clickable(
+                            interactionSource = startInteractionSource,
+                            indication = null,
+                            onClick = onDeploy
+                        )
                         .testTag("dialog_deploy_btn"),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = CoralPrimary,
-                        contentColor = Color(0xFF09131F)
-                    ),
-                    shape = RoundedCornerShape(14.dp)
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    val startText = when (currentLanguage.lowercase()) {
-                        "ja" -> "スタート"
-                        "in", "id" -> "MULAI"
-                        else -> "START"
-                    }
-                    Text(
-                        text = startText,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                    Image(
+                        painter = painterResource(id = startDrawable),
+                        contentDescription = startLabel,
+                        modifier = Modifier
+                            .fillMaxWidth(0.92f)
+                            .height(58.dp),
+                        contentScale = ContentScale.Fit
                     )
                 }
             } else {

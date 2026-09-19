@@ -41,6 +41,13 @@ enum class GamePhase {
     RESULT
 }
 
+data class FruitNinjaComboBurst(
+    val id: Long,
+    val count: Int,
+    val x: Float,
+    val y: Float
+)
+
 data class GameUiState(
     val phase: GamePhase = GamePhase.SPLASH,
     val currentUser: String? = null,
@@ -81,6 +88,7 @@ data class GameUiState(
     val isFreezeActive: Boolean = false,
     val freezeTimeRemaining: Float = 0f,
     val freezeBonusHits: Int = 0,
+    val activeComboBurst: FruitNinjaComboBurst? = null,
     val shouldShowTrailer: Boolean = false,
     val shouldShowComic: Boolean = false
 )
@@ -105,6 +113,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var feedbackToastTimer: Float = 0f
     private var sessionCheckJob: Job? = null
     private var targetPhaseAfterSplash: GamePhase = GamePhase.LOGIN_REGISTER
+    private var isMusicSpedUp: Boolean = false
 
     init {
         setupEngineCallbacks()
@@ -167,6 +176,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             sessionManager.appLanguage.collect { lang ->
                 LocaleManager.setLocale(lang)
+                engine.currentLanguage = lang
                 _uiState.value = _uiState.value.copy(currentLanguage = lang)
             }
         }
@@ -174,20 +184,47 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun setupEngineCallbacks() {
         engine.onViolationSliced = { item, points, multiplier ->
-            soundManager.playSfx("slice-hit")
-            slowMoTimer = 0.10f
-            flashTimer = 0.08f
+            val isCombo4x = multiplier >= 4 || _uiState.value.comboMultiplier >= 4
+            val justHit4x = multiplier >= 4 && _uiState.value.comboMultiplier < 4
+            if (justHit4x) {
+                soundManager.playSfx("combo-4x")
+                soundManager.playSfx("slice-combo4x")
+            } else if (isCombo4x) {
+                soundManager.playSfx("slice-combo4x")
+            } else {
+                soundManager.playSfx("slice-hit")
+            }
+
+            slowMoTimer = if (multiplier >= 4) 0.16f else 0.10f
+            flashTimer = if (multiplier >= 4) 0.12f else 0.08f
+
+            val newBurst = if (justHit4x && _uiState.value.activeComboBurst == null) {
+                FruitNinjaComboBurst(
+                    id = System.currentTimeMillis(),
+                    count = 4,
+                    x = item.x,
+                    y = item.y
+                )
+            } else {
+                _uiState.value.activeComboBurst
+            }
+
             _uiState.value = _uiState.value.copy(
                 score = engine.score,
                 comboMultiplier = multiplier,
                 comboStreak = engine.comboStreak,
-                slowMoFactor = 0.30f,
-                flashOverlayColor = 0x55FFFFFF
+                slowMoFactor = if (multiplier >= 4) 0.20f else 0.30f,
+                flashOverlayColor = if (multiplier >= 4) 0x66FFD700 else 0x55FFFFFF,
+                activeComboBurst = newBurst
             )
         }
 
         engine.onTrapSliced = { item ->
             soundManager.playSfx("trap-hit")
+            if (isMusicSpedUp) {
+                isMusicSpedUp = false
+                musicManager.setPlaybackSpeed(1.0f)
+            }
             shakeTimer = 0.25f
             flashTimer = 0.16f
             feedbackToastTimer = 2.0f
@@ -215,6 +252,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         engine.onWrongSlice = { item ->
             soundManager.playSfx("wrong-slice")
+            if (isMusicSpedUp) {
+                isMusicSpedUp = false
+                musicManager.setPlaybackSpeed(1.0f)
+            }
             shakeTimer = 0.35f
             flashTimer = 0.22f
             feedbackToastTimer = 2.5f
@@ -238,6 +279,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         engine.onViolationMissed = { item ->
             soundManager.playSfx("wrong-slice")
+            if (isMusicSpedUp) {
+                isMusicSpedUp = false
+                musicManager.setPlaybackSpeed(1.0f)
+            }
             shakeTimer = 0.25f
             flashTimer = 0.18f
             feedbackToastTimer = 2.0f
@@ -315,9 +360,34 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
+        engine.onComboTriggered = { count, hitX, hitY ->
+            if (count >= 4) {
+                soundManager.playSfx("combo-4x")
+                soundManager.playSfx("slice-combo4x")
+                _uiState.value = _uiState.value.copy(
+                    activeComboBurst = FruitNinjaComboBurst(
+                        id = System.currentTimeMillis(),
+                        count = count,
+                        x = hitX,
+                        y = hitY
+                    )
+                )
+            }
+        }
+
         engine.onGameOver = { finalScore ->
+            if (isMusicSpedUp) {
+                isMusicSpedUp = false
+                musicManager.setPlaybackSpeed(1.0f)
+            }
             soundManager.playSfx("game-over")
             handleGameOver(finalScore)
+        }
+    }
+
+    fun dismissComboBurst(id: Long) {
+        if (_uiState.value.activeComboBurst?.id == id) {
+            _uiState.value = _uiState.value.copy(activeComboBurst = null)
         }
     }
 
@@ -332,7 +402,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 is AuthResult.Success -> {
                     val (stats, allTimeBest) = leaderboardRepository.fetchAndSyncUserStats(result.username)
                     val sessions = leaderboardRepository.getRecentSessions(result.username, 10)
-                    delay(120L) // Allow keyboard dismissal animation to complete cleanly
+                    delay(350L) // Allow keyboard dismissal animation to complete cleanly
                     _uiState.value = _uiState.value.copy(
                         currentUser = result.username,
                         userStats = stats,
@@ -359,7 +429,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 is AuthResult.Success -> {
                     val (stats, allTimeBest) = leaderboardRepository.fetchAndSyncUserStats(result.username)
                     val sessions = leaderboardRepository.getRecentSessions(result.username, 10)
-                    delay(120L) // Allow keyboard dismissal animation to complete cleanly
+                    delay(350L) // Allow keyboard dismissal animation to complete cleanly
                     _uiState.value = _uiState.value.copy(
                         currentUser = result.username,
                         userStats = stats,
@@ -417,6 +487,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             sessionManager.setLanguage(lang)
             LocaleManager.setLocale(lang)
+            engine.currentLanguage = lang
             _uiState.value = _uiState.value.copy(currentLanguage = lang)
             onLanguageChanged?.invoke()
         }
@@ -499,6 +570,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         flashTimer = 0f
         shakeTimer = 0f
         feedbackToastTimer = 0f
+        isMusicSpedUp = false
+        musicManager.setPlaybackSpeed(1.0f)
 
         _uiState.value = _uiState.value.copy(
             phase = GamePhase.PLAYING,
@@ -540,6 +613,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun returnToMenu() {
         engine.resetGame()
+        isMusicSpedUp = false
+        musicManager.setPlaybackSpeed(1.0f)
         _uiState.value = _uiState.value.copy(
             phase = GamePhase.MENU,
             isPaused = false,
@@ -645,6 +720,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun handleGameOver(finalScore: Int) {
+        if (isMusicSpedUp) {
+            isMusicSpedUp = false
+            musicManager.setPlaybackSpeed(1.0f)
+        }
         val level = _uiState.value.selectedLevel
         val difficulty = _uiState.value.selectedDifficulty
         val stars = level.calculateStars(finalScore)

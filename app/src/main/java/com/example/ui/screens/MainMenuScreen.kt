@@ -63,6 +63,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.LanguageDropdownMenu
@@ -253,7 +254,8 @@ fun MainMenuScreen(
                         StartShiftGlowingButton(
                             onClick = onStartShift,
                             pulseScale = pulseScale,
-                            isLandscape = true
+                            isLandscape = true,
+                            currentLanguage = currentLanguage
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -267,6 +269,7 @@ fun MainMenuScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         ComplianceRulesTable(
+                            currentLanguage = currentLanguage,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -279,7 +282,7 @@ fun MainMenuScreen(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     // Clearance so the artwork title "Bang Patuh Compliance Ninja" in background image is fully visible
                     Spacer(modifier = Modifier.height(160.dp))
@@ -319,13 +322,15 @@ fun MainMenuScreen(
                     StartShiftGlowingButton(
                         onClick = onStartShift,
                         pulseScale = pulseScale,
-                        isLandscape = false
+                        isLandscape = false,
+                        currentLanguage = currentLanguage
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Side-by-side rules table
                     ComplianceRulesTable(
+                        currentLanguage = currentLanguage,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -822,6 +827,7 @@ private fun MainMenuTopBar(
 
 @Composable
 private fun ComplianceRulesTable(
+    currentLanguage: String,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -834,8 +840,30 @@ private fun ComplianceRulesTable(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        // 1. MENGHAPUS JARAK BAWAAN KOLOM
+        verticalArrangement = Arrangement.spacedBy(0.dp) 
     ) {
+        val howToPlayText = when (currentLanguage.lowercase()) {
+            "ja" -> "遊び方" 
+            "in", "id" -> "CARA BERMAIN" 
+            else -> "HOW TO PLAY" 
+        }
+
+        Text(
+            text = howToPlayText,
+            color = Color(0xFFFFD54F), 
+            fontSize = 20.sp, 
+            fontWeight = FontWeight.Black,
+            letterSpacing = 2.sp, 
+            style = TextStyle(
+                shadow = Shadow(
+                    color = Color(0xCC000000), 
+                    offset = Offset(2f, 4f),
+                    blurRadius = 6f
+                )
+            ),
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
         // Horizontally Draggable 4-Category Carousel
         LazyRow(
             state = listState,
@@ -843,7 +871,7 @@ private fun ComplianceRulesTable(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
         ) {
-            // Scroll 1: SLICE — Violations (Tebas Pelanggaran)
+            // Scroll 1: SLICE — Violations
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_slice_violations_header).replace("—", "-"),
@@ -860,7 +888,7 @@ private fun ComplianceRulesTable(
                 )
             }
 
-            // Scroll 2: PROTECT — Legitimate (Lindungi Dokumen Sah)
+            // Scroll 2: PROTECT — Legitimate
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_protect_legitimate_header).replace("—", "-"),
@@ -877,7 +905,7 @@ private fun ComplianceRulesTable(
                 )
             }
 
-            // Scroll 3: AVOID — Traps (Hindari Jebakan)
+            // Scroll 3: AVOID — Traps
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_avoid_legitimate_header).replace("—", "-"),
@@ -894,7 +922,7 @@ private fun ComplianceRulesTable(
                 )
             }
 
-            // Scroll 4: COLLECT — Bonus (Kumpulkan Bonus)
+            // Scroll 4: COLLECT — Bonus
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_collect_bonus_header).replace("—", "-"),
@@ -916,6 +944,8 @@ private fun ComplianceRulesTable(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // 2. TARIKAN EKSTREM KE ATAS (-30.dp)
+                .offset(y = (-25).dp) 
                 .padding(horizontal = 4.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -936,7 +966,7 @@ private fun ComplianceRulesTable(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                for (pageIndex in 0..3) {
+                for (pageIndex in 0..2) {
                     val isActive = activeScrollPage == pageIndex
                     Box(
                         modifier = Modifier
@@ -1516,16 +1546,11 @@ private fun StartShiftGlowingButton(
     onClick: () -> Unit,
     pulseScale: Float,
     isLandscape: Boolean,
+    currentLanguage: String = "en",
     modifier: Modifier = Modifier
 ) {
-    val buttonShape = RoundedCornerShape(26.dp)
-    val gradientBrush = Brush.horizontalGradient(
-        listOf(
-            Color(0xFFFF5252),
-            Color(0xFFE53935),
-            Color(0xFFD32F2F)
-        )
-    )
+    // Kita HANYA mengatur lebarnya saja, tinggi akan mengikuti rasio gambar asli
+    val buttonWidth = if (isLandscape) 234.dp else 260.dp
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -1546,63 +1571,33 @@ private fun StartShiftGlowingButton(
         label = "start_button_interactive_scale"
     )
 
-    Button(
-        onClick = onClick,
-        interactionSource = interactionSource,
+    val buttonDrawable = when (currentLanguage.lowercase()) {
+        "ja" -> R.drawable.btn_start_shift_jp
+        "in", "id" -> R.drawable.btn_start_shift_id
+        else -> R.drawable.btn_start_shift_eg
+    }
+
+    val startShiftLabel = when (currentLanguage.lowercase()) {
+        "ja" -> "シフト開始"
+        "in", "id" -> "MULAI SHIFT"
+        else -> "START SHIFT"
+    }
+
+    // Tampilkan gambar SECARA LANGSUNG tanpa komponen Box pembungkus!
+    Image(
+        painter = painterResource(id = buttonDrawable),
+        contentDescription = startShiftLabel,
         modifier = modifier
             .scale(pulseScale * interactiveScale)
-            .width(if (isLandscape) 220.dp else 260.dp)
-            .height(50.dp)
-            .shadow(16.dp, buttonShape, spotColor = Color(0xFFFF5252))
-            .pointerInput(onClick) {
-                detectDragGestures(
-                    onDragStart = { onClick() },
-                    onDrag = { _, _ -> }
-                )
-            }
+            .width(buttonWidth)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
             .testTag("start_shift_button"),
-        shape = buttonShape,
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = PaddingValues()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(gradientBrush, buttonShape)
-                .border(1.5.dp, Color(0xFFFFCDD2).copy(alpha = 0.85f), buttonShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                // Samurai Katana Sword slice icon
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_katana_slice),
-                    contentDescription = "Katana Slice",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(28.dp)
-                )
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    text = stringResource(R.string.menu_start_shift),
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.8.sp,
-                    style = TextStyle(
-                        shadow = Shadow(
-                            color = Color(0x88000000),
-                            offset = Offset(2f, 2f),
-                            blurRadius = 4f
-                        )
-                    )
-                )
-            }
-        }
-    }
+        contentScale = ContentScale.Fit // Memastikan lekukan gambar asli tidak rusak
+    )
 }
 
 

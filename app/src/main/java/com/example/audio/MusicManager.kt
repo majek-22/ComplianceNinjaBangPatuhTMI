@@ -21,6 +21,7 @@ class MusicManager(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var currentTrackType: TrackType = TrackType.NONE
     private var isMuted: Boolean = false
+    private var currentPlaybackSpeed: Float = 1.0f
 
     var isTrailerPlaying: Boolean = false
         set(value) {
@@ -33,6 +34,24 @@ class MusicManager(private val context: Context) {
     enum class TrackType {
         NONE, MENU, GAMEPLAY
     }
+
+    fun setPlaybackSpeed(speed: Float) {
+        currentPlaybackSpeed = speed
+        try {
+            mediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    val params = player.playbackParams
+                    params.speed = speed
+                    player.playbackParams = params
+                    Log.i(TAG, "setPlaybackSpeed: speed=$speed applied to MediaPlayer")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to set playback speed: ${e.message}")
+        }
+    }
+
+    fun getPlaybackSpeed(): Float = currentPlaybackSpeed
 
     fun setMuted(muted: Boolean) {
         isMuted = muted
@@ -56,6 +75,7 @@ class MusicManager(private val context: Context) {
     }
 
     fun playMenuTheme() {
+        setPlaybackSpeed(1.0f)
         if (isTrailerPlaying) {
             Log.d(TAG, "playMenuTheme: suppressed because trailer is playing")
             return
@@ -139,6 +159,17 @@ class MusicManager(private val context: Context) {
             player.isLooping = true
             player.setVolume(volume, volume)
             player.start()
+
+            if (currentPlaybackSpeed != 1.0f) {
+                try {
+                    val params = player.playbackParams
+                    params.speed = currentPlaybackSpeed
+                    player.playbackParams = params
+                    Log.i(TAG, "Applied playback speed $currentPlaybackSpeed on track start")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to apply playback speed on track start: ${e.message}")
+                }
+            }
 
             mediaPlayer = player
             Log.i(TAG, "Successfully started background track '$resourceName' (isPlaying=${player.isPlaying}, volume=$volume)")

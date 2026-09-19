@@ -41,6 +41,7 @@ import com.example.ui.viewmodel.GameViewModel
 class MainActivity : AppCompatActivity() {
 
     private var isImeAnimationRunning = false
+    private var lastImeHideTimestamp = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,12 +92,13 @@ class MainActivity : AppCompatActivity() {
                 override fun onEnd(animation: WindowInsetsAnimationCompat) {
                     if ((animation.typeMask and WindowInsetsCompat.Type.ime()) != 0) {
                         isImeAnimationRunning = false
-                        // Allow IME close animation to settle before re-hiding navigation bars
+                        lastImeHideTimestamp = System.currentTimeMillis()
+                        // Allow IME close animation to fully settle (500ms) before re-hiding navigation bars
                         decorView.postDelayed({
                             if (!isDestroyed && !isFinishing && !isImeAnimationRunning) {
                                 hideSystemNavigationBar()
                             }
-                        }, 250L)
+                        }, 500L)
                     }
                 }
             }
@@ -105,23 +107,30 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        hideSystemNavigationBar()
+        decorViewPostSafeHide(300L)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            // Post delayed to avoid interrupting IME_INSETS_HIDE_ANIMATION during focus transitions
-            window?.decorView?.postDelayed({
-                if (!isDestroyed && !isFinishing && !isImeAnimationRunning) {
-                    hideSystemNavigationBar()
-                }
-            }, 300L)
+            decorViewPostSafeHide(400L)
         }
+    }
+
+    private fun decorViewPostSafeHide(delayMs: Long) {
+        window?.decorView?.postDelayed({
+            if (!isDestroyed && !isFinishing && !isImeAnimationRunning) {
+                hideSystemNavigationBar()
+            }
+        }, delayMs)
     }
 
     fun hideSystemNavigationBar() {
         if (isImeAnimationRunning) {
+            return
+        }
+        // If IME just finished closing within the last 400ms, wait before hiding system bars
+        if (System.currentTimeMillis() - lastImeHideTimestamp < 400L) {
             return
         }
         val window = window ?: return

@@ -279,8 +279,8 @@ class GameEngineTest {
         assertEquals(3, engine.activeItems.size)
         assertFalse(engine.isFreezeActive)
 
-        // Slice the corruptor
-        val hits = engine.processSliceSegment(550f, 400f, 650f, 400f)
+        // Slicing through the corruptor circle (swipe completely across diameter)
+        val hits = engine.processSliceSegment(500f, 400f, 700f, 400f)
         assertEquals(1, hits)
 
         // 1. All other items should be cleared automatically
@@ -292,9 +292,9 @@ class GameEngineTest {
         assertEquals(5.0f, engine.freezeTimer, 0.05f)
         assertEquals(1, engine.freezeBonusHits)
 
-        // 3. Additional slices during freeze
+        // 3. Additional slices during freeze (must also swipe across circle)
         Thread.sleep(50)
-        engine.processSliceSegment(550f, 400f, 650f, 400f)
+        engine.processSliceSegment(500f, 400f, 700f, 400f)
         assertEquals(2, engine.freezeBonusHits)
 
         // 4. Advancing past 5 seconds ends freeze mode
@@ -322,7 +322,7 @@ class GameEngineTest {
             for (item in engine.activeItems.toList()) {
                 if (item.category.isFreezeBonus && !item.sliced && !hadBonusBefore) {
                     bonusSpawns++
-                    engine.processSliceSegment(item.x - 20f, item.y, item.x + 20f, item.y)
+                    engine.processSliceSegment(item.x - 100f, item.y, item.x + 100f, item.y)
                 } else if (item.isViolation && !item.sliced) {
                     engine.processSliceSegment(item.x - 20f, item.y, item.x + 20f, item.y)
                 }
@@ -331,5 +331,21 @@ class GameEngineTest {
 
         // Should have spawned multiple times (at least 2 times in 90 seconds)
         assertTrue("Bonus corruptor should spawn multiple times over 90s, but spawned $bonusSpawns times", bonusSpawns >= 2)
+    }
+
+    @Test
+    fun testBonusCorruptorRejectsTapWithoutFullSlice() {
+        val corruptor = engine.spawnItemManually(ComplianceCategory.BONUS_CORRUPTOR, 500f, 500f, radius = 80f)
+        engine.startStroke()
+
+        // Micro touch or tiny tap inside the circle (length 10f < 80f * 1.25f)
+        val tapHits = engine.processSliceSegment(500f, 500f, 505f, 505f)
+        assertEquals(0, tapHits)
+        assertFalse(engine.isFreezeActive)
+
+        // Now full slice spanning through the circle (length 200f > 80f * 1.25f)
+        val sliceHits = engine.processSliceSegment(390f, 500f, 610f, 500f)
+        assertEquals(1, sliceHits)
+        assertTrue(engine.isFreezeActive)
     }
 }

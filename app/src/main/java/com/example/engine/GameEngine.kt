@@ -102,6 +102,7 @@ class GameEngine(
         private set
     var isGameOver: Boolean = false
         private set
+    var currentLanguage: String = "en"
 
     // Trap statistics
     var trapsAvoidedCount: Int = 0
@@ -124,16 +125,26 @@ class GameEngine(
     private var strokePointsEarned: Int = 0
     private var strokeBonusAwarded: Boolean = false
 
+    // Stroke points tracking for corruptor slice sensitivity
+    private val currentStrokePoints = mutableListOf<StrokePoint>()
+    private var strokeCorruptorHitsCount: Int = 0
+
+    private data class StrokePoint(val x: Float, val y: Float, val timeMillis: Long)
+
     fun startStroke() {
         strokeViolationCount = 0
         strokePointsEarned = 0
         strokeBonusAwarded = false
+        currentStrokePoints.clear()
+        strokeCorruptorHitsCount = 0
     }
 
     fun endStroke() {
         strokeViolationCount = 0
         strokePointsEarned = 0
         strokeBonusAwarded = false
+        currentStrokePoints.clear()
+        strokeCorruptorHitsCount = 0
     }
 
     // Compliance Debrief tracking (violation category -> count sliced)
@@ -193,6 +204,7 @@ class GameEngine(
     var onFreezeStarted: (() -> Unit)? = null
     var onFreezeBonusSliced: ((item: GameItem, totalSlices: Int, pointsAwarded: Int) -> Unit)? = null
     var onFreezeEnded: ((totalSlices: Int, totalBonusPoints: Int) -> Unit)? = null
+    var onComboTriggered: ((comboCount: Int, hitX: Float, hitY: Float) -> Unit)? = null
     var onGameOver: ((finalScore: Int) -> Unit)? = null
 
     /**
@@ -520,6 +532,12 @@ class GameEngine(
         val lenSq = dx * dx + dy * dy
         if (lenSq < 4f) return 0 // Ignore micro-jitters without movement
 
+        val now = System.currentTimeMillis()
+        if (currentStrokePoints.isEmpty()) {
+            currentStrokePoints.add(StrokePoint(x1, y1, now))
+        }
+        currentStrokePoints.add(StrokePoint(x2, y2, now))
+
         var sliceCount = 0
         val sliceAngle = (atan2(dy, dx) * 180f / PI).toFloat()
 
@@ -538,6 +556,43 @@ class GameEngine(
 
             if (distSq <= hitRadiusSq) {
                 if (item.category.isFreezeBonus) {
+                    // Sensitive slice requirement for Corruptor bonus:
+                    // Player must actually perform a full slice passing through/across the item's circle,
+                    // not just touch or tap on it. Slice segment or accumulated stroke through the circle
+                    // must have a cut length spanning the circle (> 1.25 * radius) or start/end crossing diameter.
+                    val segLen = kotlin.math.sqrt(lenSq)
+                    val r = item.radius
+                    val passesAcrossCircle = if (segLen >= r * 1.25f) {
+                        true
+                    } else {
+                        // Check accumulated points of this stroke that passed within or across the corruptor's bounds
+                        var strokeMinX = Float.MAX_VALUE
+                        var strokeMaxX = -Float.MAX_VALUE
+                        var strokeMinY = Float.MAX_VALUE
+                        var strokeMaxY = -Float.MAX_VALUE
+                        var pointsInProximity = 0
+                        val expandedRadiusSq = (r * 1.6f) * (r * 1.6f)
+
+                        for (pt in currentStrokePoints) {
+                            val pDistSq = (pt.x - cx) * (pt.x - cx) + (pt.y - cy) * (pt.y - cy)
+                            if (pDistSq <= expandedRadiusSq) {
+                                strokeMinX = minOf(strokeMinX, pt.x)
+                                strokeMaxX = maxOf(strokeMaxX, pt.x)
+                                strokeMinY = minOf(strokeMinY, pt.y)
+                                strokeMaxY = maxOf(strokeMaxY, pt.y)
+                                pointsInProximity++
+                            }
+                        }
+                        val strokeSpanSq = (strokeMaxX - strokeMinX) * (strokeMaxX - strokeMinX) +
+                                (strokeMaxY - strokeMinY) * (strokeMaxY - strokeMinY)
+                        pointsInProximity >= 2 && strokeSpanSq >= (r * 1.25f) * (r * 1.25f)
+                    }
+
+                    if (!passesAcrossCircle) {
+                        // Slice does not pass across the circle with sufficient swipe length; ignore touch/tap
+                        continue
+                    }
+
                     if (freezeTimer <= 0f) {
                         // First slice triggers the 5-second freeze mode!
                         freezeCorruptorX = item.x.coerceIn(item.radius, screenWidth - item.radius)
@@ -553,13 +608,14 @@ class GameEngine(
 
                         startFreezeMode()
                         handleFreezeBonusHit(item, projX, projY)
+                        strokeCorruptorHitsCount++
                         sliceCount++
                     } else {
                         // Slices during active freeze
-                        val now = System.currentTimeMillis()
                         if (now - lastFreezeHitTimeMillis >= 40L) {
                             lastFreezeHitTimeMillis = now
                             handleFreezeBonusHit(item, projX, projY)
+                            strokeCorruptorHitsCount++
                             sliceCount++
                         }
                     }
@@ -675,6 +731,7 @@ class GameEngine(
         }
 
         item.sliced = true
+        item.isCombo4xSliced = comboMultiplier >= 4
         item.sliceAngle = sliceAngle
 
         val sliceRad = sliceAngle * (PI.toFloat() / 180f)
@@ -715,11 +772,29 @@ class GameEngine(
             maxComboStreak = comboStreak
         }
 
+        val oldMultiplier = comboMultiplier
         comboMultiplier = when {
             comboStreak >= 10 -> 4
             comboStreak >= 6 -> 3
             comboStreak >= 3 -> 2
             else -> 1
+        }
+
+        if (comboMultiplier >= 4 || strokeViolationCount >= 2) {
+            item.isCombo4xSliced = true
+        }
+
+        val combo4xPopupText = when {
+            currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4!"
+            currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "KOMBO x4!"
+            else -> "COMBO x4!"
+        }
+
+        if (oldMultiplier < 4 && comboMultiplier == 4) {
+            spawnParticleBurst(hitX, hitY, count = 40, color = 0xFFFF3D00)
+            spawnParticleBurst(hitX, hitY, count = 30, color = 0xFFFFD700)
+            addPopup(combo4xPopupText, hitX, hitY - 70f, color = 0xFFFFD700, scale = 1.65f)
+            onComboTriggered?.invoke(4, hitX, hitY)
         }
 
         strokeViolationCount++
@@ -742,32 +817,53 @@ class GameEngine(
                 spawnParticleBurst(hitX, hitY, count = 20, color = 0xFFFFC857) // Warm gold
 
                 addPopup("+$thisHitPoints (x${comboMultiplier * 2})", hitX, hitY - 20f, color = 0xFFFFC857, scale = 1.25f)
-                addPopup("TRIPLE SLICE! x2", hitX, hitY - 60f, color = 0xFF00E5FF, scale = 1.45f)
             }
-            strokeViolationCount > 3 -> {
-                // Chained 4th+ slice in this stroke continues to receive 2x multiplier
+            strokeViolationCount == 4 -> {
+                // 4-item multi-slice in one stroke: Quad Slice Combo 4x!
                 val multiHitPoints = normalPoints * 2
                 finalPoints = multiHitPoints
                 score += finalPoints
 
-                spawnParticleBurst(hitX, hitY, count = 30, color = 0xFF00E5FF)
+                spawnParticleBurst(hitX, hitY, count = 45, color = 0xFFFF3D00) // Blazing flame red
+                spawnParticleBurst(hitX, hitY, count = 35, color = 0xFFFFD700) // Radiant gold
+                addPopup("+$multiHitPoints (x${comboMultiplier * 2})", hitX, hitY - 20f, color = 0xFFFFC857, scale = 1.3f)
+                addPopup(combo4xPopupText, hitX, hitY - 65f, color = 0xFFFF3D00, scale = 1.7f)
+                onComboTriggered?.invoke(4, hitX, hitY)
+            }
+            strokeViolationCount > 4 -> {
+                // Chained 5th+ slice in this stroke continues to receive 2x multiplier
+                val multiHitPoints = normalPoints * 2
+                finalPoints = multiHitPoints
+                score += finalPoints
+
+                spawnParticleBurst(hitX, hitY, count = 35, color = 0xFF00E5FF)
                 addPopup("+$multiHitPoints (x${comboMultiplier * 2})", hitX, hitY - 20f, color = 0xFFFFC857, scale = 1.25f)
-                addPopup("MULTI-SLICE! x2", hitX, hitY - 60f, color = 0xFF00E5FF, scale = 1.35f)
             }
             else -> {
                 finalPoints = normalPoints
                 score += finalPoints
                 strokePointsEarned += finalPoints
 
-                spawnParticleBurst(hitX, hitY, count = 26, color = 0xFFFFC857) // Warm Gold
-                spawnParticleBurst(hitX, hitY, count = 10, color = 0xFFFF6B5B) // Coral
+                val burstColor = if (comboMultiplier >= 4) 0xFFFF3D00 else 0xFFFFC857
+                spawnParticleBurst(hitX, hitY, count = if (comboMultiplier >= 4) 36 else 26, color = burstColor)
+                spawnParticleBurst(hitX, hitY, count = if (comboMultiplier >= 4) 20 else 10, color = 0xFFFFD700)
 
-                val popupText = if (comboMultiplier > 1) {
+                val comboLabel = when {
+                    currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4"
+                    currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "Kombo x4"
+                    else -> "Combo x4"
+                }
+
+                val popupText = if (comboMultiplier >= 4) {
+                    "+$finalPoints ($comboLabel)"
+                } else if (comboMultiplier > 1) {
                     "+$finalPoints (x$comboMultiplier)"
                 } else {
                     "+$finalPoints"
                 }
-                addPopup(popupText, hitX, hitY - 20f, color = 0xFFFFC857, scale = 1.2f)
+                val popupColor = if (comboMultiplier >= 4) 0xFFFFD700 else 0xFFFFC857
+                val popupScale = if (comboMultiplier >= 4) 1.35f else 1.2f
+                addPopup(popupText, hitX, hitY - 20f, color = popupColor, scale = popupScale)
             }
         }
 

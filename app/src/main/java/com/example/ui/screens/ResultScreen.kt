@@ -1,12 +1,19 @@
 package com.example.ui.screens
 
 import android.app.Activity
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -51,11 +58,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -412,14 +421,21 @@ fun ResultScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val actionButtonHeight = 44.dp
+                val actionButtonShape = RoundedCornerShape(22.dp)
+
                 // Main Menu Secondary Button
                 OutlinedButton(
                     onClick = onReturnToMenu,
                     modifier = Modifier
-                        .height(44.dp)
-                        .padding(end = 12.dp),
-                    shape = RoundedCornerShape(22.dp),
-                    border = BorderStroke(1.2.dp, Color(0x6664B5F6))
+                        .height(actionButtonHeight)
+                        .padding(end = 6.dp),
+                    shape = actionButtonShape,
+                    border = BorderStroke(1.2.dp, Color(0x6664B5F6)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color(0x1A1E88E5)
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Home,
@@ -441,69 +457,59 @@ fun ResultScreen(
                     )
                 }
 
-                // Big Glowing Red "Play Again" Pill Button (Screen 3)
-                val playAgainShape = RoundedCornerShape(24.dp)
-                Button(
-                    onClick = onPlayAgain,
+                // Play Again Button (Localized 3 images: English, Indonesian, Japanese, matching Start Shift button style)
+                val playAgainDrawable = when (currentLanguage.lowercase()) {
+                    "ja" -> R.drawable.btn_play_again_jp
+                    "in", "id" -> R.drawable.btn_play_again_id
+                    else -> R.drawable.btn_play_again_eg
+                }
+
+                val playAgainLabel = when (currentLanguage.lowercase()) {
+                    "ja" -> "もう一度プレイ"
+                    "in", "id" -> "MAIN LAGI"
+                    else -> "PLAY AGAIN"
+                }
+
+                val playAgainInteractionSource = remember { MutableInteractionSource() }
+                val isPlayAgainPressed by playAgainInteractionSource.collectIsPressedAsState()
+                val isPlayAgainHovered by playAgainInteractionSource.collectIsHoveredAsState()
+
+                val targetPlayAgainInteractiveScale = when {
+                    isPlayAgainPressed -> 1.07f
+                    isPlayAgainHovered -> 1.04f
+                    else -> 1.0f
+                }
+
+                val playAgainScale by animateFloatAsState(
+                    targetValue = targetPlayAgainInteractiveScale,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    label = "play_again_scale"
+                )
+
+                Image(
+                    painter = painterResource(id = playAgainDrawable),
+                    contentDescription = playAgainLabel,
                     modifier = Modifier
-                        .width(if (isLandscape) 220.dp else 240.dp)
-                        .height(48.dp)
-                        .shadow(16.dp, playAgainShape, spotColor = Color(0xFFFF5252))
-                        .testTag("play_again_button"),
-                    shape = playAgainShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color(0xFFFF5252),
-                                        Color(0xFFE53935),
-                                        Color(0xFFD32F2F)
-                                    )
-                                ),
-                                playAgainShape
-                            )
-                            .border(1.5.dp, Color(0xFFFFCDD2).copy(alpha = 0.85f), playAgainShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            // Samurai Katana Sword slice icon matching MainMenu
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_katana_slice),
-                                contentDescription = "Katana Slice",
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(26.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            val playAgainLabel = when (currentLanguage.lowercase()) {
-                                "ja" -> "もう一度プレイ"
-                                "in", "id" -> "MAIN LAGI"
-                                else -> "PLAY AGAIN"
-                            }
-                            Text(
-                                text = playAgainLabel,
-                                color = Color.White,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 0.8.sp,
-                                style = TextStyle(
-                                    shadow = Shadow(
-                                        color = Color(0x88000000),
-                                        offset = Offset(2f, 2f),
-                                        blurRadius = 4f
-                                    )
-                                )
+                        .scale(playAgainScale)
+                        .height(actionButtonHeight)
+                        .padding(start = 6.dp)
+                        .clickable(
+                            interactionSource = playAgainInteractionSource,
+                            indication = null,
+                            onClick = onPlayAgain
+                        )
+                        .pointerInput(onPlayAgain) {
+                            detectDragGestures(
+                                onDragStart = { onPlayAgain() },
+                                onDrag = { _, _ -> }
                             )
                         }
-                    }
-                }
+                        .testTag("play_again_button"),
+                    contentScale = ContentScale.Fit 
+                )
             }
         }
     }
