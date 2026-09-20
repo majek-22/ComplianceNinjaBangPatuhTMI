@@ -580,13 +580,10 @@ fun LoginRegisterScreen(
                         onSubmit = {
                             focusManager.clearFocus(force = true)
                             keyboardController?.hide()
-                            coroutineScope.launch {
-                                delay(300)
-                                if (selectedTab == 0) {
-                                    onLogin(username, password)
-                                } else {
-                                    onRegister(username, password)
-                                }
+                            if (selectedTab == 0) {
+                                onLogin(username, password)
+                            } else {
+                                onRegister(username, password)
                             }
                         },
                         modifier = Modifier
@@ -634,13 +631,10 @@ fun LoginRegisterScreen(
                         onSubmit = {
                             focusManager.clearFocus(force = true)
                             keyboardController?.hide()
-                            coroutineScope.launch {
-                                delay(300)
-                                if (selectedTab == 0) {
-                                    onLogin(username, password)
-                                } else {
-                                    onRegister(username, password)
-                                }
+                            if (selectedTab == 0) {
+                                onLogin(username, password)
+                            } else {
+                                onRegister(username, password)
                             }
                         },
                         modifier = Modifier
@@ -1192,6 +1186,8 @@ fun ResetPasswordDialog(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Dialog(
         onDismissRequest = { if (!isLoading) onDismiss() },
@@ -1394,6 +1390,8 @@ fun ResetPasswordDialog(
                                 errorMessage = if (isJa) "パスワードが一致しません" else if (isId) "Konfirmasi kata sandi tidak cocok" else "Passwords do not match"
                                 return@Button
                             }
+                            focusManager.clearFocus(force = true)
+                            keyboardController?.hide()
                             coroutineScope.launch {
                                 isLoading = true
                                 val result = onConfirmReset(cleanUser, newPassword)

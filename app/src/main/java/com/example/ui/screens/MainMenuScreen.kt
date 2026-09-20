@@ -939,40 +939,21 @@ private fun ComplianceRulesTable(
             "in", "id" -> "CARA BERMAIN" 
             else -> "HOW TO PLAY" 
         }
-        val sliceMissionBannerText = when (currentLanguage.lowercase()) {
-            "ja" -> stringResource(R.string.menu_slice_mission_banner)
-            "in", "id" -> stringResource(R.string.menu_slice_mission_banner)
-            else -> stringResource(R.string.menu_slice_mission_banner)
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(bottom = 6.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_katana_crossed),
-                contentDescription = sliceMissionBannerText,
-                modifier = Modifier
-                    .size(28.dp)
-                    .padding(end = 6.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                text = "$howToPlayText • $sliceMissionBannerText".uppercase(),
-                color = Color(0xFFFFD54F), 
-                fontSize = 18.sp, 
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp, 
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color(0xCC000000), 
-                        offset = Offset(2f, 4f),
-                        blurRadius = 6f
-                    )
+        Text(
+            text = howToPlayText,
+            color = Color(0xFFFFD54F), 
+            fontSize = 20.sp, 
+            fontWeight = FontWeight.Black,
+            letterSpacing = 2.sp, 
+            style = TextStyle(
+                shadow = Shadow(
+                    color = Color(0xCC000000), 
+                    offset = Offset(2f, 4f),
+                    blurRadius = 6f
                 )
-            )
-        }
+            ),
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
         // Horizontally Draggable 4-Category Carousel
         LazyRow(
             state = listState,

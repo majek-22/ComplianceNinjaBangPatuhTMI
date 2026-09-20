@@ -93,12 +93,12 @@ class MainActivity : AppCompatActivity() {
                     if ((animation.typeMask and WindowInsetsCompat.Type.ime()) != 0) {
                         isImeAnimationRunning = false
                         lastImeHideTimestamp = System.currentTimeMillis()
-                        // Allow IME close animation to fully settle (500ms) before re-hiding navigation bars
+                        // Allow IME close animation to fully settle (600ms) before re-hiding navigation bars
                         decorView.postDelayed({
                             if (!isDestroyed && !isFinishing && !isImeAnimationRunning) {
                                 hideSystemNavigationBar()
                             }
-                        }, 500L)
+                        }, 600L)
                     }
                 }
             }
@@ -107,13 +107,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        decorViewPostSafeHide(300L)
+        decorViewPostSafeHide(500L)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            decorViewPostSafeHide(400L)
+            decorViewPostSafeHide(500L)
         }
     }
 
@@ -129,8 +129,8 @@ class MainActivity : AppCompatActivity() {
         if (isImeAnimationRunning) {
             return
         }
-        // If IME just finished closing within the last 400ms, wait before hiding system bars
-        if (System.currentTimeMillis() - lastImeHideTimestamp < 400L) {
+        // If IME just finished closing within the last 600ms, wait before hiding system bars
+        if (System.currentTimeMillis() - lastImeHideTimestamp < 600L) {
             return
         }
         val window = window ?: return
