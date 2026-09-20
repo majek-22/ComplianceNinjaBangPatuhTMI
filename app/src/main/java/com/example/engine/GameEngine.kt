@@ -823,8 +823,8 @@ class GameEngine(
 
                 spawnParticleBurst(hitX, hitY, count = 30, color = 0xFFFFC857)
                 addPopup("+$multiHitPoints (x${comboMultiplier * 2})", hitX, hitY - 20f, color = 0xFFFFC857, scale = 1.3f)
-                addPopup(combo4xPopupText, hitX, hitY - 65f, color = 0xFFFFD700, scale = 1.65f)
-                onComboTriggered?.invoke(4, hitX, hitY)
+                //addPopup(combo4xPopupText, hitX, hitY - 65f, color = 0xFFFFD700, scale = 1.65f)
+                //onComboTriggered?.invoke(4, hitX, hitY)
             }
             strokeViolationCount > 4 -> {
                 // Chained 5th+ slice in this stroke continues to receive 2x multiplier

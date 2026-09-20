@@ -317,7 +317,7 @@ fun GameScreen(
                 FlyingItemComposable(
                     item = item,
                     painter = iconPainters[item.category],
-                    isCombo4xActive = false
+                    isCombo4xActive = uiState.comboMultiplier >= 4
                 )
             }
         }
@@ -399,7 +399,7 @@ fun GameScreen(
             drawSliceTrail(
                 points = sliceTrail,
                 isFreezeActive = uiState.isFreezeActive,
-                isCombo4xActive = false
+                isCombo4xActive = uiState.comboMultiplier >= 4
             )
 
             // Draw floating popups
