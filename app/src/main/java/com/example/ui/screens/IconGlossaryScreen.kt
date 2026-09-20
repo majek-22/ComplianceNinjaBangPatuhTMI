@@ -204,10 +204,7 @@ fun IconGlossaryScreen(
                 }
             }
 
-            // Quick Combat Directives Banner (Aturan Inti)
-            CombatDirectivesBanner(currentLanguage = currentLanguage)
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Game Style Filter Tabs
             RulesFilterTabs(
@@ -246,107 +243,6 @@ fun IconGlossaryScreen(
                 currentLanguage = currentLanguage,
                 onDismiss = { selectedEntry = null }
             )
-        }
-    }
-}
-
-/**
- * High-impact 4-way visual summary of the core gameplay rules
- */
-@Composable
-private fun CombatDirectivesBanner(currentLanguage: String) {
-    val isId = currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true)
-    val isJa = currentLanguage.equals("ja", ignoreCase = true)
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color(0x3364B5F6), RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color(0xCC0E1A2C)),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DirectiveItem(
-                    title = if (isJa) "違反を一刀両断" else if (isId) "TEBAS PELANGGARAN" else "SLICE VIOLATIONS",
-                    subtitle = if (isJa) "+10点 × コンボ" else if (isId) "+10 Poin × Kombo" else "+10 Pts × Combo",
-                    color = Color(0xFFFFC857),
-                    iconEmoji = "⚔️",
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                DirectiveItem(
-                    title = if (isJa) "正規文書を守る" else if (isId) "LINDUNGI DOKUMEN" else "PROTECT DOCUMENTS",
-                    subtitle = if (isJa) "切断厳禁 (-1ライフ)" else if (isId) "Jangan tebas (-1 Nyawa)" else "Do not slice (-1 Life)",
-                    color = Color(0xFF64B5F6),
-                    iconEmoji = "🛡️",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DirectiveItem(
-                    title = if (isJa) "罠・誤報を回避" else if (isId) "HINDARI JEBAKAN" else "AVOID TRAPS",
-                    subtitle = if (isJa) "誤切断で-10点減点" else if (isId) "Hoaks/umpan (-10 Poin)" else "Hoax/bait (-10 Pts)",
-                    color = Color(0xFFFF5252),
-                    iconEmoji = "⚠️",
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                DirectiveItem(
-                    title = if (isJa) "シールド&ボーナス" else if (isId) "AMBIL PERISAI & BONUS" else "CLAIM SHIELD & BONUS",
-                    subtitle = if (isJa) "+1ライフ / 連撃+10点" else if (isId) "+1 Nyawa / Freeze +10 Pts" else "+1 Life / Freeze +10 Pts",
-                    color = Color(0xFF00E676),
-                    iconEmoji = "💎",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DirectiveItem(
-    title: String,
-    subtitle: String,
-    color: Color,
-    iconEmoji: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = color.copy(alpha = 0.12f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.35f))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = iconEmoji, fontSize = 16.sp)
-            Spacer(modifier = Modifier.width(6.dp))
-            Column {
-                Text(
-                    text = title,
-                    color = color,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = subtitle,
-                    color = Color(0xFFB0BEC5),
-                    fontSize = 9.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
     }
 }
