@@ -454,4 +454,5 @@
     <string name="rules_tip_bonus">黄金シールドは極めて貴重だ。最優先で獲得して業務継続時間を延ばせ！</string>
     <string name="rules_dialog_close">了解</string>
     <string name="rules_items_count">%1$d 項目</string>
+    <string name="menu_slice_mission_banner">違反を一刀両断</string>
 </resources>

@@ -32,6 +32,7 @@ data class UserStats(
     val level3Stars: Int = 0,
     val level4Best: Int = 0,
     val level4Stars: Int = 0,
+    val maxUnlockedLevel: Int = 1,
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     fun getBestForLevel(level: Int): Int {
@@ -55,13 +56,23 @@ data class UserStats(
     }
 
     fun isLevelUnlocked(level: Int): Boolean {
+        if (level <= 1) return true
+        if (level <= maxUnlockedLevel) return true
         return when (level) {
             1 -> true
             2 -> level1Best >= 1200
-            3 -> level1Best >= 1200 && level2Best >= 2500
-            4 -> level1Best >= 1200 && level2Best >= 2500 && level3Best >= 5000
+            3 -> (level1Best >= 1200 && level2Best >= 2500) || maxUnlockedLevel >= 3
+            4 -> (level1Best >= 1200 && level2Best >= 2500 && level3Best >= 5000) || maxUnlockedLevel >= 4
             else -> false
         }
+    }
+
+    fun calculateMaxUnlockedLevel(): Int {
+        var maxLvl = maxOf(1, maxUnlockedLevel)
+        if (level1Best >= 1200) maxLvl = maxOf(maxLvl, 2)
+        if (level1Best >= 1200 && level2Best >= 2500) maxLvl = maxOf(maxLvl, 3)
+        if (level1Best >= 1200 && level2Best >= 2500 && level3Best >= 5000) maxLvl = maxOf(maxLvl, 4)
+        return maxLvl
     }
 
     fun getUnlockScoreRequired(level: Int): Int {

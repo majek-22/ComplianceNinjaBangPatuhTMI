@@ -454,4 +454,5 @@
     <string name="rules_tip_bonus">Perisai emas sangat berharga. Utamakan menebasnya untuk memperpanjang shift Anda!</string>
     <string name="rules_dialog_close">Dimengerti</string>
     <string name="rules_items_count">%1$d Item</string>
+    <string name="menu_slice_mission_banner">Tebas Pelanggaran</string>
 </resources>

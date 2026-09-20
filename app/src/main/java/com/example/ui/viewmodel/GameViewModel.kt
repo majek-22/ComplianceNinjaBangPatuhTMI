@@ -184,19 +184,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun setupEngineCallbacks() {
         engine.onViolationSliced = { item, points, multiplier ->
-            val isCombo4x = multiplier >= 4 || _uiState.value.comboMultiplier >= 4
             val justHit4x = multiplier >= 4 && _uiState.value.comboMultiplier < 4
             if (justHit4x) {
                 soundManager.playSfx("combo-4x")
-                soundManager.playSfx("slice-combo4x")
-            } else if (isCombo4x) {
-                soundManager.playSfx("slice-combo4x")
-            } else {
-                soundManager.playSfx("slice-hit")
             }
+            soundManager.playSfx("slice-hit")
 
-            slowMoTimer = if (multiplier >= 4) 0.16f else 0.10f
-            flashTimer = if (multiplier >= 4) 0.12f else 0.08f
+            slowMoTimer = 0.10f
+            flashTimer = 0.08f
 
             val newBurst = if (justHit4x && _uiState.value.activeComboBurst == null) {
                 FruitNinjaComboBurst(
@@ -213,8 +208,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 score = engine.score,
                 comboMultiplier = multiplier,
                 comboStreak = engine.comboStreak,
-                slowMoFactor = if (multiplier >= 4) 0.20f else 0.30f,
-                flashOverlayColor = if (multiplier >= 4) 0x66FFD700 else 0x55FFFFFF,
+                slowMoFactor = 0.30f,
+                flashOverlayColor = 0x55FFFFFF,
                 activeComboBurst = newBurst
             )
         }
@@ -363,7 +358,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         engine.onComboTriggered = { count, hitX, hitY ->
             if (count >= 4) {
                 soundManager.playSfx("combo-4x")
-                soundManager.playSfx("slice-combo4x")
                 _uiState.value = _uiState.value.copy(
                     activeComboBurst = FruitNinjaComboBurst(
                         id = System.currentTimeMillis(),

@@ -135,6 +135,7 @@ fun LevelSelectScreen(
     val shakeOffset = remember { Animatable(0f) }
     val sliceTrail = remember { mutableStateListOf<Offset>() }
     val nodeBounds = remember { mutableMapOf<Int, Rect>() }
+    var startButtonBounds by remember { mutableStateOf<Rect?>(null) }
     var hasTriggeredSlice by remember { mutableStateOf(false) }
 
     val selectedLevel = remember(selectedLevelNumber) {
@@ -189,8 +190,26 @@ fun LevelSelectScreen(
     fun checkSliceHit(p1: Offset, p2: Offset) {
         if (hasTriggeredSlice) return
         val length = hypot(p2.x - p1.x, p2.y - p1.y)
-        if (length < 35f) return
+        if (length < 30f) return
 
+        // 1. Check if slice hits the tactical mission "Start" button
+        startButtonBounds?.let { btnRect ->
+            if (lineIntersectsRect(p1, p2, btnRect)) {
+                val isUnlocked = userStats?.isLevelUnlocked(selectedLevel.levelNumber) ?: (selectedLevel.levelNumber == 1)
+                if (isUnlocked) {
+                    hasTriggeredSlice = true
+                    scope.launch {
+                        delay(120)
+                        onStartLevel(selectedLevel, selectedDifficulty)
+                    }
+                } else {
+                    triggerShakeFeedback(getUnlockMessage(selectedLevel.levelNumber))
+                }
+                return
+            }
+        }
+
+        // 2. Check if slice hits map campaign level nodes
         for ((levelNum, rect) in nodeBounds) {
             if (lineIntersectsRect(p1, p2, rect)) {
                 val lvl = LevelConfig.getByLevel(levelNum)
@@ -349,6 +368,7 @@ fun LevelSelectScreen(
                             selectedDifficulty = selectedDifficulty,
                             currentLanguage = currentLanguage,
                             onDifficultyChange = { selectedDifficulty = it },
+                            onStartButtonPositioned = { startButtonBounds = it },
                             onDeploy = {
                                 val isUnlocked = userStats?.isLevelUnlocked(selectedLevel.levelNumber) ?: (selectedLevel.levelNumber == 1)
                                 if (isUnlocked) {
@@ -400,6 +420,7 @@ fun LevelSelectScreen(
                         selectedDifficulty = selectedDifficulty,
                         currentLanguage = currentLanguage,
                         onDifficultyChange = { selectedDifficulty = it },
+                        onStartButtonPositioned = { startButtonBounds = it },
                         onDeploy = {
                             val isUnlocked = userStats?.isLevelUnlocked(selectedLevel.levelNumber) ?: (selectedLevel.levelNumber == 1)
                             if (isUnlocked) {
@@ -828,6 +849,7 @@ private fun MissionDeploymentConsole(
     selectedDifficulty: GameDifficulty,
     currentLanguage: String = "en",
     onDifficultyChange: (GameDifficulty) -> Unit,
+    onStartButtonPositioned: ((Rect) -> Unit)? = null,
     onDeploy: () -> Unit
 ) {
     val isUnlocked = userStats?.isLevelUnlocked(level.levelNumber) ?: (level.levelNumber == 1)
@@ -1128,6 +1150,9 @@ private fun MissionDeploymentConsole(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp)
+                        .onGloballyPositioned { coordinates ->
+                            onStartButtonPositioned?.invoke(coordinates.boundsInRoot())
+                        }
                         .scale(startInteractiveScale)
                         .clickable(
                             interactionSource = startInteractionSource,

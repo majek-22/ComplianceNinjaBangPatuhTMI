@@ -731,7 +731,7 @@ class GameEngine(
         }
 
         item.sliced = true
-        item.isCombo4xSliced = comboMultiplier >= 4
+        item.isCombo4xSliced = false
         item.sliceAngle = sliceAngle
 
         val sliceRad = sliceAngle * (PI.toFloat() / 180f)
@@ -780,19 +780,16 @@ class GameEngine(
             else -> 1
         }
 
-        if (comboMultiplier >= 4 || strokeViolationCount >= 2) {
-            item.isCombo4xSliced = true
-        }
+        item.isCombo4xSliced = false
 
         val combo4xPopupText = when {
-            currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4!"
-            currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "KOMBO x4!"
-            else -> "COMBO x4!"
+            currentLanguage.equals("ja", ignoreCase = true) -> "コンボ X4!"
+            currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "KOMBO X4!"
+            else -> "COMBO X4!"
         }
 
         if (oldMultiplier < 4 && comboMultiplier == 4) {
-            spawnParticleBurst(hitX, hitY, count = 40, color = 0xFFFF3D00)
-            spawnParticleBurst(hitX, hitY, count = 30, color = 0xFFFFD700)
+            spawnParticleBurst(hitX, hitY, count = 28, color = 0xFFFFC857)
             addPopup(combo4xPopupText, hitX, hitY - 70f, color = 0xFFFFD700, scale = 1.65f)
             onComboTriggered?.invoke(4, hitX, hitY)
         }
@@ -824,10 +821,9 @@ class GameEngine(
                 finalPoints = multiHitPoints
                 score += finalPoints
 
-                spawnParticleBurst(hitX, hitY, count = 45, color = 0xFFFF3D00) // Blazing flame red
-                spawnParticleBurst(hitX, hitY, count = 35, color = 0xFFFFD700) // Radiant gold
+                spawnParticleBurst(hitX, hitY, count = 30, color = 0xFFFFC857)
                 addPopup("+$multiHitPoints (x${comboMultiplier * 2})", hitX, hitY - 20f, color = 0xFFFFC857, scale = 1.3f)
-                addPopup(combo4xPopupText, hitX, hitY - 65f, color = 0xFFFF3D00, scale = 1.7f)
+                addPopup(combo4xPopupText, hitX, hitY - 65f, color = 0xFFFFD700, scale = 1.65f)
                 onComboTriggered?.invoke(4, hitX, hitY)
             }
             strokeViolationCount > 4 -> {
@@ -844,14 +840,14 @@ class GameEngine(
                 score += finalPoints
                 strokePointsEarned += finalPoints
 
-                val burstColor = if (comboMultiplier >= 4) 0xFFFF3D00 else 0xFFFFC857
-                spawnParticleBurst(hitX, hitY, count = if (comboMultiplier >= 4) 36 else 26, color = burstColor)
-                spawnParticleBurst(hitX, hitY, count = if (comboMultiplier >= 4) 20 else 10, color = 0xFFFFD700)
+                val burstColor = 0xFFFFC857
+                spawnParticleBurst(hitX, hitY, count = 26, color = burstColor)
+                spawnParticleBurst(hitX, hitY, count = 10, color = 0xFFFFD700)
 
                 val comboLabel = when {
-                    currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4"
-                    currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "Kombo x4"
-                    else -> "Combo x4"
+                    currentLanguage.equals("ja", ignoreCase = true) -> "コンボ X4"
+                    currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "KOMBO X4"
+                    else -> "COMBO X4"
                 }
 
                 val popupText = if (comboMultiplier >= 4) {

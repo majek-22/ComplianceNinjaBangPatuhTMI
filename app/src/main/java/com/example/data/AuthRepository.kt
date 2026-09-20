@@ -31,6 +31,7 @@ class AuthRepository(
     companion object {
         private const val TAG = "AuthRepo"
         private const val COLLECTION_USERS = "users"
+        private const val COLLECTION_LEADERBOARD = "leaderboard"
     }
 
     private fun getFirestore(): FirebaseFirestore {
@@ -134,13 +135,24 @@ class AuthRepository(
         val randomAvatarId = (1..10).random()
         val newAccount = UserAccount(username = cleanUser, passwordHash = hash, avatarId = randomAvatarId)
 
-        // 3. Save to Firebase Firestore: store username, password, passwordHash, avatarId
+        // 3. Save to Firebase Firestore: store username, password, passwordHash, avatarId, and level stats
         try {
             val userData = hashMapOf<String, Any>(
                 "username" to cleanUser,
                 "password" to password,
                 "passwordHash" to hash,
                 "avatarId" to randomAvatarId,
+                "maxUnlockedLevel" to 1L,
+                "level1Best" to 0L,
+                "level1Stars" to 0L,
+                "level2Best" to 0L,
+                "level2Stars" to 0L,
+                "level3Best" to 0L,
+                "level3Stars" to 0L,
+                "level4Best" to 0L,
+                "level4Stars" to 0L,
+                "overallBestScore" to 0L,
+                "highestTierReached" to 0L,
                 "createdAt" to System.currentTimeMillis(),
                 "updatedAt" to System.currentTimeMillis()
             )
@@ -162,7 +174,11 @@ class AuthRepository(
         // 4. Save to local Room DB
         try {
             database.userAccountDao().insert(newAccount)
-            val initialStats = UserStats(username = cleanUser, avatarId = randomAvatarId)
+            val initialStats = UserStats(
+                username = cleanUser,
+                avatarId = randomAvatarId,
+                maxUnlockedLevel = 1
+            )
             database.userStatsDao().insertOrUpdate(initialStats)
             sessionManager.saveSession(cleanUser)
             AuthResult.Success(cleanUser)
@@ -184,20 +200,34 @@ class AuthRepository(
         if (localAccount != null && localAccount.passwordHash == hash) {
             val stats = database.userStatsDao().getStatsDirect(localAccount.username)
             val fallbackAvatarId = if (localAccount.avatarId in 1..10) localAccount.avatarId else ((kotlin.math.abs(localAccount.username.hashCode()) % 10) + 1)
-            if (stats == null) {
-                database.userStatsDao().insertOrUpdate(UserStats(username = localAccount.username, avatarId = fallbackAvatarId))
+            val currentStats = if (stats == null) {
+                UserStats(username = localAccount.username, avatarId = fallbackAvatarId)
             } else if (stats.avatarId !in 1..10) {
-                database.userStatsDao().insertOrUpdate(stats.copy(avatarId = fallbackAvatarId))
+                stats.copy(avatarId = fallbackAvatarId)
+            } else {
+                stats
             }
+            database.userStatsDao().insertOrUpdate(currentStats)
             sessionManager.saveSession(localAccount.username)
 
-            // Ensure credentials exist in Firebase Firestore (as requested by user)
+            // Ensure credentials and level progress are backed up in Firebase Firestore
             try {
                 val syncData = hashMapOf<String, Any>(
                     "username" to localAccount.username,
                     "password" to password,
                     "passwordHash" to hash,
                     "avatarId" to fallbackAvatarId,
+                    "maxUnlockedLevel" to currentStats.calculateMaxUnlockedLevel().toLong(),
+                    "level1Best" to currentStats.level1Best.toLong(),
+                    "level1Stars" to currentStats.level1Stars.toLong(),
+                    "level2Best" to currentStats.level2Best.toLong(),
+                    "level2Stars" to currentStats.level2Stars.toLong(),
+                    "level3Best" to currentStats.level3Best.toLong(),
+                    "level3Stars" to currentStats.level3Stars.toLong(),
+                    "level4Best" to currentStats.level4Best.toLong(),
+                    "level4Stars" to currentStats.level4Stars.toLong(),
+                    "overallBestScore" to currentStats.overallBestScore.toLong(),
+                    "highestTierReached" to currentStats.highestTierReached.toLong(),
                     "updatedAt" to System.currentTimeMillis()
                 )
                 getFirestore().collection(COLLECTION_USERS).document(localAccount.username.lowercase())
@@ -255,11 +285,88 @@ class AuthRepository(
                     Log.w(TAG, "Failed inserting restored account to Room: ${e.message}")
                 }
 
-                // Restore / Ensure UserStats in local Room DB
-                val stats = database.userStatsDao().getStatsDirect(remoteUser)
-                if (stats == null) {
-                    database.userStatsDao().insertOrUpdate(UserStats(username = remoteUser, avatarId = effectiveAvatar))
-                }
+                // Restore UserStats from Firestore: levels, scores, stars, and max unlocked level
+                val remoteLvl1Best = (remoteDoc.getLong("level1Best") ?: 0L).toInt()
+                val remoteLvl1Stars = (remoteDoc.getLong("level1Stars") ?: 0L).toInt()
+                val remoteLvl2Best = (remoteDoc.getLong("level2Best") ?: 0L).toInt()
+                val remoteLvl2Stars = (remoteDoc.getLong("level2Stars") ?: 0L).toInt()
+                val remoteLvl3Best = (remoteDoc.getLong("level3Best") ?: 0L).toInt()
+                val remoteLvl3Stars = (remoteDoc.getLong("level3Stars") ?: 0L).toInt()
+                val remoteLvl4Best = (remoteDoc.getLong("level4Best") ?: 0L).toInt()
+                val remoteLvl4Stars = (remoteDoc.getLong("level4Stars") ?: 0L).toInt()
+                val remoteOverallBest = (remoteDoc.getLong("overallBestScore") ?: (remoteDoc.getLong("bestScore") ?: 0L)).toInt()
+                val remoteHighestTier = (remoteDoc.getLong("highestTierReached") ?: 0L).toInt()
+                val remoteMaxUnlocked = (remoteDoc.getLong("maxUnlockedLevel") ?: 1L).toInt()
+
+                var effectiveMaxUnlocked = maxOf(1, remoteMaxUnlocked)
+                if (remoteLvl1Best >= 1200) effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, 2)
+                if (remoteLvl1Best >= 1200 && remoteLvl2Best >= 2500) effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, 3)
+                if (remoteLvl1Best >= 1200 && remoteLvl2Best >= 2500 && remoteLvl3Best >= 5000) effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, 4)
+
+                // Also check leaderboard document in case the user played earlier builds
+                var lbBestScore = 0
+                var lbHighestTier = 0
+                var lbMaxUnlocked = 1
+                try {
+                    val lbDoc = withTimeoutOrNull(2000L) {
+                        suspendCancellableCoroutine<DocumentSnapshot?> { cont ->
+                            getFirestore().collection(COLLECTION_LEADERBOARD).document(remoteUser).get()
+                                .addOnSuccessListener { if (cont.isActive) cont.resume(it) }
+                                .addOnFailureListener { if (cont.isActive) cont.resume(null) }
+                        }
+                    }
+                    if (lbDoc != null && lbDoc.exists()) {
+                        lbBestScore = (lbDoc.getLong("bestScore") ?: 0L).toInt()
+                        lbHighestTier = (lbDoc.getLong("highestTierReached") ?: 0L).toInt()
+                        lbMaxUnlocked = (lbDoc.getLong("maxUnlockedLevel") ?: 1L).toInt()
+                    }
+                } catch (_: Exception) {}
+
+                effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, lbMaxUnlocked)
+                val finalOverallBest = maxOf(remoteOverallBest, lbBestScore)
+                val finalHighestTier = maxOf(remoteHighestTier, lbHighestTier)
+
+                val localExistingStats = database.userStatsDao().getStatsDirect(remoteUser)
+                val mergedLvl1Best = maxOf(localExistingStats?.level1Best ?: 0, remoteLvl1Best)
+                val mergedLvl2Best = maxOf(localExistingStats?.level2Best ?: 0, remoteLvl2Best)
+                val mergedLvl3Best = maxOf(localExistingStats?.level3Best ?: 0, remoteLvl3Best)
+                val mergedLvl4Best = maxOf(localExistingStats?.level4Best ?: 0, remoteLvl4Best)
+
+                if (mergedLvl1Best >= 1200) effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, 2)
+                if (mergedLvl1Best >= 1200 && mergedLvl2Best >= 2500) effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, 3)
+                if (mergedLvl1Best >= 1200 && mergedLvl2Best >= 2500 && mergedLvl3Best >= 5000) effectiveMaxUnlocked = maxOf(effectiveMaxUnlocked, 4)
+
+                val restoredStats = (localExistingStats ?: UserStats(username = remoteUser)).copy(
+                    username = remoteUser,
+                    avatarId = effectiveAvatar,
+                    overallBestScore = maxOf(localExistingStats?.overallBestScore ?: 0, finalOverallBest),
+                    highestTierReached = maxOf(localExistingStats?.highestTierReached ?: 0, finalHighestTier),
+                    bestScoreLevel = (remoteDoc.getLong("bestScoreLevel") ?: 1L).toInt(),
+                    bestScoreDifficulty = remoteDoc.getString("bestScoreDifficulty") ?: "Auto",
+                    gamesPlayed = maxOf(localExistingStats?.gamesPlayed ?: 0, (remoteDoc.getLong("gamesPlayed") ?: 0L).toInt()),
+                    totalViolationsSliced = maxOf(localExistingStats?.totalViolationsSliced ?: 0, (remoteDoc.getLong("totalViolationsSliced") ?: 0L).toInt()),
+                    totalTrapsAvoided = maxOf(localExistingStats?.totalTrapsAvoided ?: 0, (remoteDoc.getLong("totalTrapsAvoided") ?: 0L).toInt()),
+                    totalTrapsSliced = maxOf(localExistingStats?.totalTrapsSliced ?: 0, (remoteDoc.getLong("totalTrapsSliced") ?: 0L).toInt()),
+                    bestComboStreak = maxOf(localExistingStats?.bestComboStreak ?: 0, (remoteDoc.getLong("bestComboStreak") ?: 0L).toInt()),
+                    briberySliced = maxOf(localExistingStats?.briberySliced ?: 0, (remoteDoc.getLong("briberySliced") ?: 0L).toInt()),
+                    fraudSliced = maxOf(localExistingStats?.fraudSliced ?: 0, (remoteDoc.getLong("fraudSliced") ?: 0L).toInt()),
+                    moneyLaunderingSliced = maxOf(localExistingStats?.moneyLaunderingSliced ?: 0, (remoteDoc.getLong("moneyLaunderingSliced") ?: 0L).toInt()),
+                    dataBreachSliced = maxOf(localExistingStats?.dataBreachSliced ?: 0, (remoteDoc.getLong("dataBreachSliced") ?: 0L).toInt()),
+                    systemicCorruptionSliced = maxOf(localExistingStats?.systemicCorruptionSliced ?: 0, (remoteDoc.getLong("systemicCorruptionSliced") ?: 0L).toInt()),
+                    otherViolationsSliced = maxOf(localExistingStats?.otherViolationsSliced ?: 0, (remoteDoc.getLong("otherViolationsSliced") ?: 0L).toInt()),
+                    level1Best = mergedLvl1Best,
+                    level1Stars = maxOf(localExistingStats?.level1Stars ?: 0, remoteLvl1Stars),
+                    level2Best = mergedLvl2Best,
+                    level2Stars = maxOf(localExistingStats?.level2Stars ?: 0, remoteLvl2Stars),
+                    level3Best = mergedLvl3Best,
+                    level3Stars = maxOf(localExistingStats?.level3Stars ?: 0, remoteLvl3Stars),
+                    level4Best = mergedLvl4Best,
+                    level4Stars = maxOf(localExistingStats?.level4Stars ?: 0, remoteLvl4Stars),
+                    maxUnlockedLevel = maxOf(localExistingStats?.maxUnlockedLevel ?: 1, effectiveMaxUnlocked),
+                    updatedAt = System.currentTimeMillis()
+                )
+
+                database.userStatsDao().insertOrUpdate(restoredStats)
 
                 // If remote document didn't have password field yet, write it now
                 if (remotePassword == null) {

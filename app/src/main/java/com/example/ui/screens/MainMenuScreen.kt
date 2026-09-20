@@ -70,6 +70,7 @@ import com.example.ui.components.LanguageDropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -83,8 +84,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -92,6 +98,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -157,8 +165,57 @@ fun MainMenuScreen(
     val coroutineScope = rememberCoroutineScope()
     val chatIconRotation = remember { Animatable(0f) }
 
+    val sliceTrail = remember { mutableStateListOf<Offset>() }
+    var startButtonBounds by remember { mutableStateOf<Rect?>(null) }
+    var hasTriggeredStartShift by remember { mutableStateOf(false) }
+
+    fun checkSliceStartShift(p1: Offset, p2: Offset) {
+        if (hasTriggeredStartShift) return
+        val length = kotlin.math.hypot(p2.x - p1.x, p2.y - p1.y)
+        if (length < 30f) return
+
+        val bounds = startButtonBounds ?: return
+        if (lineIntersectsRectMenu(p1, p2, bounds)) {
+            hasTriggeredStartShift = true
+            coroutineScope.launch {
+                delay(100)
+                onStartShift()
+            }
+        }
+    }
+
     BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        sliceTrail.clear()
+                        sliceTrail.add(offset)
+                    },
+                    onDrag = { change, _ ->
+                        change.consume()
+                        val currentPos = change.position
+                        if (sliceTrail.isNotEmpty()) {
+                            val lastPos = sliceTrail.last()
+                            checkSliceStartShift(lastPos, currentPos)
+                        }
+                        sliceTrail.add(currentPos)
+                        if (sliceTrail.size > 14) {
+                            sliceTrail.removeAt(0)
+                        }
+                    },
+                    onDragEnd = {
+                        coroutineScope.launch {
+                            delay(100)
+                            sliceTrail.clear()
+                        }
+                    },
+                    onDragCancel = {
+                        sliceTrail.clear()
+                    }
+                )
+            }
     ) {
         val isLandscape = maxWidth > maxHeight
 
@@ -255,7 +312,8 @@ fun MainMenuScreen(
                             onClick = onStartShift,
                             pulseScale = pulseScale,
                             isLandscape = true,
-                            currentLanguage = currentLanguage
+                            currentLanguage = currentLanguage,
+                            onPositioned = { startButtonBounds = it }
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -323,7 +381,8 @@ fun MainMenuScreen(
                         onClick = onStartShift,
                         pulseScale = pulseScale,
                         isLandscape = false,
-                        currentLanguage = currentLanguage
+                        currentLanguage = currentLanguage,
+                        onPositioned = { startButtonBounds = it }
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -444,14 +503,46 @@ fun MainMenuScreen(
             }
         }
 
-        // 5. Popup Mini Screen: Compliance AI Chatbot
+        // 5. Slice Trail Overlay (Visual feedback when dragging / slicing)
+        if (sliceTrail.size > 1) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val path = Path().apply {
+                    moveTo(sliceTrail.first().x, sliceTrail.first().y)
+                    for (i in 1 until sliceTrail.size) {
+                        lineTo(sliceTrail[i].x, sliceTrail[i].y)
+                    }
+                }
+                // Outer vibrant glowing stroke
+                drawPath(
+                    path = path,
+                    color = CoralPrimary.copy(alpha = 0.85f),
+                    style = Stroke(
+                        width = 12f,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
+                )
+                // Inner pure-white energy blade core
+                drawPath(
+                    path = path,
+                    color = Color.White,
+                    style = Stroke(
+                        width = 4.5f,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
+                )
+            }
+        }
+
+        // 6. Popup Mini Screen: Compliance AI Chatbot
         if (showChatPopup) {
             ComplianceChatbotPopup(
                 onDismiss = { showChatPopup = false }
             )
         }
 
-        // 6. Compliance Comic Viewer Dialog (5 Pages, Horizontal Draggable, 80% screen in landscape)
+        // 7. Compliance Comic Viewer Dialog (5 Pages, Horizontal Draggable, 80% screen in landscape)
         if (showComicDialog) {
             ComplianceComicDialog(
                 onDismiss = {
@@ -848,22 +939,40 @@ private fun ComplianceRulesTable(
             "in", "id" -> "CARA BERMAIN" 
             else -> "HOW TO PLAY" 
         }
+        val sliceMissionBannerText = when (currentLanguage.lowercase()) {
+            "ja" -> stringResource(R.string.menu_slice_mission_banner)
+            "in", "id" -> stringResource(R.string.menu_slice_mission_banner)
+            else -> stringResource(R.string.menu_slice_mission_banner)
+        }
 
-        Text(
-            text = howToPlayText,
-            color = Color(0xFFFFD54F), 
-            fontSize = 20.sp, 
-            fontWeight = FontWeight.Black,
-            letterSpacing = 2.sp, 
-            style = TextStyle(
-                shadow = Shadow(
-                    color = Color(0xCC000000), 
-                    offset = Offset(2f, 4f),
-                    blurRadius = 6f
-                )
-            ),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
             modifier = Modifier.padding(bottom = 6.dp)
-        )
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_katana_crossed),
+                contentDescription = sliceMissionBannerText,
+                modifier = Modifier
+                    .size(28.dp)
+                    .padding(end = 6.dp),
+                contentScale = ContentScale.Fit
+            )
+            Text(
+                text = "$howToPlayText • $sliceMissionBannerText".uppercase(),
+                color = Color(0xFFFFD54F), 
+                fontSize = 18.sp, 
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp, 
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color(0xCC000000), 
+                        offset = Offset(2f, 4f),
+                        blurRadius = 6f
+                    )
+                )
+            )
+        }
         // Horizontally Draggable 4-Category Carousel
         LazyRow(
             state = listState,
@@ -1547,6 +1656,7 @@ private fun StartShiftGlowingButton(
     pulseScale: Float,
     isLandscape: Boolean,
     currentLanguage: String = "en",
+    onPositioned: ((Rect) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     // Kita HANYA mengatur lebarnya saja, tinggi akan mengikuti rasio gambar asli
@@ -1588,6 +1698,9 @@ private fun StartShiftGlowingButton(
         painter = painterResource(id = buttonDrawable),
         contentDescription = startShiftLabel,
         modifier = modifier
+            .onGloballyPositioned { coordinates ->
+                onPositioned?.invoke(coordinates.boundsInRoot())
+            }
             .scale(pulseScale * interactiveScale)
             .width(buttonWidth)
             .clickable(
@@ -1598,6 +1711,31 @@ private fun StartShiftGlowingButton(
             .testTag("start_shift_button"),
         contentScale = ContentScale.Fit // Memastikan lekukan gambar asli tidak rusak
     )
+}
+
+private fun lineIntersectsRectMenu(p1: Offset, p2: Offset, rect: Rect): Boolean {
+    if (rect.contains(p1) || rect.contains(p2)) return true
+    val minX = minOf(p1.x, p2.x)
+    val maxX = maxOf(p1.x, p2.x)
+    val minY = minOf(p1.y, p2.y)
+    val maxY = maxOf(p1.y, p2.y)
+
+    if (maxX < rect.left || minX > rect.right || maxY < rect.top || minY > rect.bottom) {
+        return false
+    }
+
+    return lineIntersectsLineMenu(p1, p2, Offset(rect.left, rect.top), Offset(rect.right, rect.top)) ||
+            lineIntersectsLineMenu(p1, p2, Offset(rect.left, rect.bottom), Offset(rect.right, rect.bottom)) ||
+            lineIntersectsLineMenu(p1, p2, Offset(rect.left, rect.top), Offset(rect.left, rect.bottom)) ||
+            lineIntersectsLineMenu(p1, p2, Offset(rect.right, rect.top), Offset(rect.right, rect.bottom))
+}
+
+private fun lineIntersectsLineMenu(a1: Offset, a2: Offset, b1: Offset, b2: Offset): Boolean {
+    val d = (a2.x - a1.x) * (b2.y - b1.y) - (a2.y - a1.y) * (b2.x - b1.x)
+    if (d == 0f) return false
+    val u = ((b1.x - a1.x) * (b2.y - b1.y) - (b1.y - a1.y) * (b2.x - b1.x)) / d
+    val v = ((b1.x - a1.x) * (a2.y - a1.y) - (b1.y - a1.y) * (a2.x - a1.x)) / d
+    return (u in 0f..1f) && (v in 0f..1f)
 }
 
 

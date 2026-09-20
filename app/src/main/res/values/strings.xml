@@ -454,4 +454,5 @@
     <string name="rules_tip_bonus">Golden shields are very valuable. Prioritize slicing them to extend your shift!</string>
     <string name="rules_dialog_close">Understood</string>
     <string name="rules_items_count">%1$d Items</string>
+    <string name="menu_slice_mission_banner">Slice Violations</string>
 </resources>

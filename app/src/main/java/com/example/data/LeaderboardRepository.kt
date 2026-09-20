@@ -8,6 +8,7 @@ import com.example.data.local.CachedLeaderboardEntry
 import com.example.data.local.UserStats
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -40,6 +41,7 @@ class LeaderboardRepository(
     companion object {
         private const val TAG = "LeaderboardRepo"
         private const val COLLECTION_LEADERBOARD = "leaderboard"
+        private const val COLLECTION_USERS = "users"
     }
 
     private fun getFirestore(): FirebaseFirestore {
@@ -74,47 +76,123 @@ class LeaderboardRepository(
     }
 
     /**
-     * Fix 1: Fetch and sync user stats from Room & Firestore.
-     * Ensures Main Menu always reads the player's real all-time best score before display.
+     * Fetch and sync user stats from Room & Firestore.
+     * Ensures player's level progression, stars, and all-time best scores are preserved
+     * even across uninstall and reinstallation.
      */
     suspend fun fetchAndSyncUserStats(username: String): Pair<UserStats, Int> = withContext(Dispatchers.IO) {
         var localStats = database.userStatsDao().getStatsDirect(username) ?: UserStats(username = username)
-        var allTimeBest = localStats.overallBestScore
-        var highestTier = localStats.highestTierReached
 
         try {
-            val doc = suspendCancellableCoroutine { continuation ->
+            // 1. Query Firestore users collection
+            val userDoc = suspendCancellableCoroutine<DocumentSnapshot?> { continuation ->
+                getFirestore().collection(COLLECTION_USERS).document(username.lowercase()).get()
+                    .addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
+                    .addOnFailureListener { if (continuation.isActive) continuation.resume(null) }
+            }
+
+            // 2. Query Firestore leaderboard collection
+            val lbDoc = suspendCancellableCoroutine<DocumentSnapshot?> { continuation ->
                 getFirestore().collection(COLLECTION_LEADERBOARD).document(username).get()
                     .addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
                     .addOnFailureListener { if (continuation.isActive) continuation.resume(null) }
             }
-            if (doc != null && doc.exists()) {
-                val remoteBest = (doc.getLong("bestScore") ?: 0L).toInt()
-                val remoteTier = (doc.getLong("highestTierReached") ?: doc.getLong("bestScoreLevel") ?: 0L).toInt()
-                if (remoteBest > allTimeBest) {
-                    allTimeBest = remoteBest
-                    highestTier = maxOf(highestTier, remoteTier)
-                    localStats = localStats.copy(
-                        overallBestScore = allTimeBest,
-                        highestTierReached = highestTier,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    database.userStatsDao().insertOrUpdate(localStats)
-                } else if (allTimeBest > remoteBest) {
-                    syncPersonalBestToFirestore(
-                        username = username,
-                        bestScore = allTimeBest,
-                        tierReached = highestTier,
-                        level = 1,
-                        difficulty = "Auto"
-                    )
-                }
+
+            val remoteLvl1Best = maxOf(
+                (userDoc?.getLong("level1Best") ?: 0L).toInt(),
+                (lbDoc?.getLong("level1Best") ?: 0L).toInt()
+            )
+            val remoteLvl2Best = maxOf(
+                (userDoc?.getLong("level2Best") ?: 0L).toInt(),
+                (lbDoc?.getLong("level2Best") ?: 0L).toInt()
+            )
+            val remoteLvl3Best = maxOf(
+                (userDoc?.getLong("level3Best") ?: 0L).toInt(),
+                (lbDoc?.getLong("level3Best") ?: 0L).toInt()
+            )
+            val remoteLvl4Best = maxOf(
+                (userDoc?.getLong("level4Best") ?: 0L).toInt(),
+                (lbDoc?.getLong("level4Best") ?: 0L).toInt()
+            )
+
+            val remoteLvl1Stars = (userDoc?.getLong("level1Stars") ?: 0L).toInt()
+            val remoteLvl2Stars = (userDoc?.getLong("level2Stars") ?: 0L).toInt()
+            val remoteLvl3Stars = (userDoc?.getLong("level3Stars") ?: 0L).toInt()
+            val remoteLvl4Stars = (userDoc?.getLong("level4Stars") ?: 0L).toInt()
+
+            val remoteMaxUnlocked = maxOf(
+                (userDoc?.getLong("maxUnlockedLevel") ?: 1L).toInt(),
+                (lbDoc?.getLong("maxUnlockedLevel") ?: 1L).toInt()
+            )
+            val remoteOverallBest = maxOf(
+                (userDoc?.getLong("overallBestScore") ?: 0L).toInt(),
+                (lbDoc?.getLong("bestScore") ?: 0L).toInt()
+            )
+            val remoteHighestTier = maxOf(
+                (userDoc?.getLong("highestTierReached") ?: 0L).toInt(),
+                (lbDoc?.getLong("highestTierReached") ?: 0L).toInt()
+            )
+
+            // Merge local and remote
+            val mergedLvl1Best = maxOf(localStats.level1Best, remoteLvl1Best)
+            val mergedLvl2Best = maxOf(localStats.level2Best, remoteLvl2Best)
+            val mergedLvl3Best = maxOf(localStats.level3Best, remoteLvl3Best)
+            val mergedLvl4Best = maxOf(localStats.level4Best, remoteLvl4Best)
+
+            val mergedLvl1Stars = maxOf(localStats.level1Stars, remoteLvl1Stars)
+            val mergedLvl2Stars = maxOf(localStats.level2Stars, remoteLvl2Stars)
+            val mergedLvl3Stars = maxOf(localStats.level3Stars, remoteLvl3Stars)
+            val mergedLvl4Stars = maxOf(localStats.level4Stars, remoteLvl4Stars)
+
+            val mergedOverallBest = maxOf(localStats.overallBestScore, remoteOverallBest)
+            val mergedHighestTier = maxOf(localStats.highestTierReached, remoteHighestTier)
+
+            var mergedMaxUnlocked = maxOf(localStats.maxUnlockedLevel, remoteMaxUnlocked)
+            if (mergedLvl1Best >= 1200) mergedMaxUnlocked = maxOf(mergedMaxUnlocked, 2)
+            if (mergedLvl1Best >= 1200 && mergedLvl2Best >= 2500) mergedMaxUnlocked = maxOf(mergedMaxUnlocked, 3)
+            if (mergedLvl1Best >= 1200 && mergedLvl2Best >= 2500 && mergedLvl3Best >= 5000) mergedMaxUnlocked = maxOf(mergedMaxUnlocked, 4)
+
+            val mergedAvatar = if (localStats.avatarId in 1..10) localStats.avatarId else ((userDoc?.getLong("avatarId") ?: 1L).toInt().coerceIn(1, 10))
+
+            val mergedStats = localStats.copy(
+                avatarId = mergedAvatar,
+                overallBestScore = mergedOverallBest,
+                highestTierReached = mergedHighestTier,
+                level1Best = mergedLvl1Best,
+                level1Stars = mergedLvl1Stars,
+                level2Best = mergedLvl2Best,
+                level2Stars = mergedLvl2Stars,
+                level3Best = mergedLvl3Best,
+                level3Stars = mergedLvl3Stars,
+                level4Best = mergedLvl4Best,
+                level4Stars = mergedLvl4Stars,
+                maxUnlockedLevel = mergedMaxUnlocked,
+                gamesPlayed = maxOf(localStats.gamesPlayed, (userDoc?.getLong("gamesPlayed") ?: 0L).toInt()),
+                totalViolationsSliced = maxOf(localStats.totalViolationsSliced, (userDoc?.getLong("totalViolationsSliced") ?: 0L).toInt()),
+                totalTrapsAvoided = maxOf(localStats.totalTrapsAvoided, (userDoc?.getLong("totalTrapsAvoided") ?: 0L).toInt()),
+                totalTrapsSliced = maxOf(localStats.totalTrapsSliced, (userDoc?.getLong("totalTrapsSliced") ?: 0L).toInt()),
+                bestComboStreak = maxOf(localStats.bestComboStreak, (userDoc?.getLong("bestComboStreak") ?: 0L).toInt()),
+                briberySliced = maxOf(localStats.briberySliced, (userDoc?.getLong("briberySliced") ?: 0L).toInt()),
+                fraudSliced = maxOf(localStats.fraudSliced, (userDoc?.getLong("fraudSliced") ?: 0L).toInt()),
+                moneyLaunderingSliced = maxOf(localStats.moneyLaunderingSliced, (userDoc?.getLong("moneyLaunderingSliced") ?: 0L).toInt()),
+                dataBreachSliced = maxOf(localStats.dataBreachSliced, (userDoc?.getLong("dataBreachSliced") ?: 0L).toInt()),
+                systemicCorruptionSliced = maxOf(localStats.systemicCorruptionSliced, (userDoc?.getLong("systemicCorruptionSliced") ?: 0L).toInt()),
+                otherViolationsSliced = maxOf(localStats.otherViolationsSliced, (userDoc?.getLong("otherViolationsSliced") ?: 0L).toInt()),
+                updatedAt = System.currentTimeMillis()
+            )
+
+            localStats = mergedStats
+            database.userStatsDao().insertOrUpdate(mergedStats)
+
+            // If local had higher progress or remote was missing, sync to Firestore
+            if (mergedMaxUnlocked > remoteMaxUnlocked || mergedOverallBest > remoteOverallBest || mergedLvl1Best > remoteLvl1Best) {
+                syncUserStatsToFirestore(mergedStats)
             }
         } catch (e: Exception) {
             Log.w(TAG, "Sync user stats error: ${e.message}")
         }
 
-        Pair(localStats, allTimeBest)
+        Pair(localStats, localStats.overallBestScore)
     }
 
     suspend fun getTop100Leaderboard(): LeaderboardResult = withContext(Dispatchers.IO) {
@@ -253,6 +331,12 @@ class LeaderboardRepository(
         val newLevel4Best = if (levelNumber == 4) maxOf(existing.level4Best, score) else existing.level4Best
         val newLevel4Stars = if (levelNumber == 4) maxOf(existing.level4Stars, stars) else existing.level4Stars
 
+        // Calculate max unlocked level based on performance and existing progression
+        var calculatedMaxUnlocked = maxOf(existing.maxUnlockedLevel, levelNumber)
+        if (newLevel1Best >= 1200) calculatedMaxUnlocked = maxOf(calculatedMaxUnlocked, 2)
+        if (newLevel1Best >= 1200 && newLevel2Best >= 2500) calculatedMaxUnlocked = maxOf(calculatedMaxUnlocked, 3)
+        if (newLevel1Best >= 1200 && newLevel2Best >= 2500 && newLevel3Best >= 5000) calculatedMaxUnlocked = maxOf(calculatedMaxUnlocked, 4)
+
         val isNewOverallBest = score > existing.overallBestScore
         val newOverallBest = if (isNewOverallBest) score else existing.overallBestScore
         val newBestLevel = if (isNewOverallBest) levelNumber else existing.bestScoreLevel
@@ -293,6 +377,7 @@ class LeaderboardRepository(
             level3Stars = newLevel3Stars,
             level4Best = newLevel4Best,
             level4Stars = newLevel4Stars,
+            maxUnlockedLevel = calculatedMaxUnlocked,
             updatedAt = System.currentTimeMillis()
         )
 
@@ -320,16 +405,8 @@ class LeaderboardRepository(
             )
         } catch (_: Exception) { }
 
-        // Upload to Firestore if new overall personal best achieved or score > 0
-        if (newOverallBest > 0) {
-            syncPersonalBestToFirestore(
-                username = username,
-                bestScore = newOverallBest,
-                tierReached = newHighestTier,
-                level = newBestLevel,
-                difficulty = newBestDiff
-            )
-        }
+        // Immediately backup all stats and level progression to Firestore
+        syncUserStatsToFirestore(updatedStats)
 
         updatedStats
     }
@@ -344,6 +421,76 @@ class LeaderboardRepository(
 
     fun getRecentSessionsFlow(username: String): Flow<List<com.example.data.local.GameSessionRecord>> {
         return database.gameSessionDao().getRecentSessions(username)
+    }
+
+    suspend fun syncUserStatsToFirestore(stats: UserStats) = withContext(Dispatchers.IO) {
+        val cleanUser = stats.username.trim()
+        if (cleanUser.isBlank()) return@withContext
+
+        try {
+            val statsMap = hashMapOf<String, Any>(
+                "username" to cleanUser,
+                "avatarId" to stats.avatarId.toLong(),
+                "maxUnlockedLevel" to stats.calculateMaxUnlockedLevel().toLong(),
+                "overallBestScore" to stats.overallBestScore.toLong(),
+                "highestTierReached" to stats.highestTierReached.toLong(),
+                "bestScoreLevel" to stats.bestScoreLevel.toLong(),
+                "bestScoreDifficulty" to stats.bestScoreDifficulty,
+                "gamesPlayed" to stats.gamesPlayed.toLong(),
+                "totalViolationsSliced" to stats.totalViolationsSliced.toLong(),
+                "totalTrapsAvoided" to stats.totalTrapsAvoided.toLong(),
+                "totalTrapsSliced" to stats.totalTrapsSliced.toLong(),
+                "bestComboStreak" to stats.bestComboStreak.toLong(),
+                "briberySliced" to stats.briberySliced.toLong(),
+                "fraudSliced" to stats.fraudSliced.toLong(),
+                "moneyLaunderingSliced" to stats.moneyLaunderingSliced.toLong(),
+                "dataBreachSliced" to stats.dataBreachSliced.toLong(),
+                "systemicCorruptionSliced" to stats.systemicCorruptionSliced.toLong(),
+                "otherViolationsSliced" to stats.otherViolationsSliced.toLong(),
+                "level1Best" to stats.level1Best.toLong(),
+                "level1Stars" to stats.level1Stars.toLong(),
+                "level2Best" to stats.level2Best.toLong(),
+                "level2Stars" to stats.level2Stars.toLong(),
+                "level3Best" to stats.level3Best.toLong(),
+                "level3Stars" to stats.level3Stars.toLong(),
+                "level4Best" to stats.level4Best.toLong(),
+                "level4Stars" to stats.level4Stars.toLong(),
+                "updatedAt" to System.currentTimeMillis()
+            )
+
+            // 1. Sync to users collection in Firestore
+            getFirestore().collection(COLLECTION_USERS)
+                .document(cleanUser.lowercase())
+                .set(statsMap, SetOptions.merge())
+
+            // 2. Sync to leaderboard collection in Firestore
+            val leaderboardMap = hashMapOf<String, Any>(
+                "username" to cleanUser,
+                "bestScore" to stats.overallBestScore.toLong(),
+                "highestTierReached" to stats.highestTierReached.toLong(),
+                "maxUnlockedLevel" to stats.calculateMaxUnlockedLevel().toLong(),
+                "level1Best" to stats.level1Best.toLong(),
+                "level2Best" to stats.level2Best.toLong(),
+                "level3Best" to stats.level3Best.toLong(),
+                "level4Best" to stats.level4Best.toLong(),
+                "difficultyEffective" to "Auto",
+                "bestScoreLevel" to stats.bestScoreLevel.toLong(),
+                "difficulty" to stats.bestScoreDifficulty,
+                "avatarId" to stats.avatarId.toLong(),
+                "updatedAt" to System.currentTimeMillis()
+            )
+            getFirestore().collection(COLLECTION_LEADERBOARD)
+                .document(cleanUser)
+                .set(leaderboardMap, SetOptions.merge())
+                .addOnSuccessListener {
+                    Log.d(TAG, "Successfully synced user stats and levels to Firestore for $cleanUser")
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Failed to sync user stats to Firestore: ${e.message}")
+                }
+        } catch (e: Exception) {
+            Log.w(TAG, "Firestore syncUserStats error: ${e.message}")
+        }
     }
 
     suspend fun syncPersonalBestToFirestore(

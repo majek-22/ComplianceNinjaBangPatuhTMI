@@ -312,13 +312,12 @@ fun GameScreen(
         }
 
         // 2. ACTIVE FLYING ITEMS: Rendered as discrete Compose composables driven by SnapshotStateList
-        val isCombo4xRunning = uiState.comboMultiplier >= 4 || (uiState.activeComboBurst?.count ?: 0) >= 4
         for (item in viewModel.engine.activeItems) {
             key(item.id) {
                 FlyingItemComposable(
                     item = item,
                     painter = iconPainters[item.category],
-                    isCombo4xActive = isCombo4xRunning
+                    isCombo4xActive = false
                 )
             }
         }
@@ -396,11 +395,11 @@ fun GameScreen(
                 drawFreezeSlices(freezeSlices)
             }
 
-            // Draw active slice trail (enlarged effect if freeze bonus is active or combo 4x)
+            // Draw active slice trail (normal katana slice effect, cyan if freeze bonus active)
             drawSliceTrail(
                 points = sliceTrail,
                 isFreezeActive = uiState.isFreezeActive,
-                isCombo4xActive = uiState.comboMultiplier >= 4 || (uiState.activeComboBurst?.count ?: 0) >= 4
+                isCombo4xActive = false
             )
 
             // Draw floating popups
@@ -809,14 +808,8 @@ private fun FlyingItemComposable(
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val r = size.width / 2f
 
-                    // 1. Radiant outer neon aura matching RULES category color (or flaming sunburst if Combo 4x active)
-                    val auraColors = if (isCombo4xActive) {
-                        listOf(
-                            Color(0xFFFF3D00).copy(alpha = 0.90f),
-                            Color(0xFFFFD700).copy(alpha = 0.60f),
-                            Color.Transparent
-                        )
-                    } else if (item.category.isFreezeBonus) {
+                    // 1. Radiant outer neon aura matching RULES category color
+                    val auraColors = if (item.category.isFreezeBonus) {
                         listOf(
                             Color(0xFF00E676).copy(alpha = 0.85f),
                             Color(0xFFFFD700).copy(alpha = 0.45f),
@@ -849,7 +842,7 @@ private fun FlyingItemComposable(
 
                     // Inner soft highlight disc
                     drawCircle(
-                        color = (if (isCombo4xActive) Color(0xFFFFD700) else categoryColor).copy(alpha = 0.25f),
+                        color = categoryColor.copy(alpha = 0.25f),
                         radius = r * 0.88f,
                         center = Offset(r, r)
                     )
@@ -871,12 +864,12 @@ private fun FlyingItemComposable(
                         }
                     }
 
-                    // 4. Accessible, crisp rim border ring matching RULES (Molten gold rim if Combo 4x active)
+                    // 4. Accessible, crisp rim border ring matching RULES
                     drawCircle(
-                        color = if (isCombo4xActive) Color(0xFFFFD700) else categoryColor,
+                        color = categoryColor,
                         radius = r * 0.95f,
                         center = Offset(r, r),
-                        style = Stroke(width = if (isCombo4xActive || item.category.isFreezeBonus) 5f else 3.5f)
+                        style = Stroke(width = if (item.category.isFreezeBonus) 5f else 3.5f)
                     )
                 }
             }
@@ -947,38 +940,6 @@ private fun DrawScope.drawSlicedHalves(
         item.y + item.half2OffsetY
     )
 
-    // COMBO 4X SPECIAL VISUAL: Central radiant solar shockwave ring between severed halves
-    if (item.isCombo4xSliced && item.alpha > 0f) {
-        val midX = (half1Center.x + half2Center.x) / 2f
-        val midY = (half1Center.y + half2Center.y) / 2f
-        val sepDist = kotlin.math.hypot(half1Center.x - half2Center.x, half1Center.y - half2Center.y)
-        val shockRadius = item.radius * 0.95f + sepDist * 0.85f
-        val shockAlpha = (item.alpha * 0.80f).coerceIn(0f, 1f)
-
-        // Blazing explosion disc
-        drawCircle(
-            brush = Brush.radialGradient(
-                listOf(
-                    Color(0xFFFFD700).copy(alpha = shockAlpha),
-                    Color(0xFFFF3D00).copy(alpha = shockAlpha * 0.55f),
-                    Color.Transparent
-                ),
-                radius = shockRadius,
-                center = Offset(midX, midY)
-            ),
-            radius = shockRadius,
-            center = Offset(midX, midY)
-        )
-
-        // Golden shockwave ring
-        drawCircle(
-            color = Color(0xFFFFD700).copy(alpha = shockAlpha * 0.95f),
-            radius = shockRadius * 0.82f,
-            center = Offset(midX, midY),
-            style = Stroke(width = 4.5f)
-        )
-    }
-
     drawSlicedHalf(
         center = half1Center,
         rotation = item.rotation + item.halfRotation1,
@@ -992,7 +953,7 @@ private fun DrawScope.drawSlicedHalves(
         dirY = dirY,
         normX = normX,
         normY = normY,
-        isCombo4x = item.isCombo4xSliced
+        isCombo4x = false
     )
 
     drawSlicedHalf(
@@ -1008,7 +969,7 @@ private fun DrawScope.drawSlicedHalves(
         dirY = dirY,
         normX = normX,
         normY = normY,
-        isCombo4x = item.isCombo4xSliced
+        isCombo4x = false
     )
 }
 
@@ -1497,9 +1458,9 @@ private fun TopHudBar(
     modifier: Modifier = Modifier
 ) {
     val combo4xBadgeText = when {
-        currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4"
-        currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "Kombo x4"
-        else -> "Combo x4"
+        currentLanguage.equals("ja", ignoreCase = true) -> "コンボ X4"
+        currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "KOMBO X4"
+        else -> "COMBO X4"
     }
     // High-contrast floating HUD bar matching Screen 2
     Box(
@@ -1654,8 +1615,81 @@ private fun TopHudBar(
                     }
                 }
 
-                // Combo Badge: ONLY appears when the player reaches Combo x4 (not shown for x2 or x3)
-                if (comboMultiplier >= 4) {
+                // Combo Badge next to lives:
+                // - Shows "X2" when comboMultiplier == 2
+                // - Shows "X3" when comboMultiplier == 3
+                // - Shows "COMBO X4" ONLY when player reaches comboMultiplier >= 4
+                if (comboMultiplier == 2) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xEEFF8F00),
+                        border = BorderStroke(1.2.dp, Color(0xFFFFD54F)),
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.testTag("game_combo_badge_x2")
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xFFE65100), Color(0xFFFF9800))
+                                    )
+                                )
+                                .padding(horizontal = 7.dp, vertical = 2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "X2",
+                                style = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp,
+                                    shadow = Shadow(
+                                        color = Color(0xCC000000),
+                                        offset = Offset(1f, 1f),
+                                        blurRadius = 3f
+                                    )
+                                ),
+                                modifier = Modifier.testTag("game_combo_badge")
+                            )
+                        }
+                    }
+                } else if (comboMultiplier == 3) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xDDF4511E),
+                        border = BorderStroke(1.2.dp, Color(0xFFFFAB91)),
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.testTag("game_combo_badge_x3")
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xFFBF360C), Color(0xFFFF5722))
+                                    )
+                                )
+                                .padding(horizontal = 7.dp, vertical = 2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "X3",
+                                style = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp,
+                                    shadow = Shadow(
+                                        color = Color(0xCC000000),
+                                        offset = Offset(1f, 1f),
+                                        blurRadius = 3f
+                                    )
+                                ),
+                                modifier = Modifier.testTag("game_combo_badge")
+                            )
+                        }
+                    }
+                } else if (comboMultiplier >= 4) {
                     val infiniteTransition = rememberInfiniteTransition(label = "combo_pulse")
                     val pulseScale by infiniteTransition.animateFloat(
                         initialValue = 1.0f,
@@ -1928,11 +1962,11 @@ private fun FruitNinjaComboOverlay(
                 auraScale = auraScaleAnim.value
             )
 
-            // 2. Big, Bold, Clean "Combo x4" 3D Arcade Text (Localized for EN, ID/IN, JA)
+            // 2. Big, Bold, Clean "COMBO X4" 3D Arcade Text (Localized for EN, ID/IN, JA)
             val displayText = when {
-                currentLanguage.equals("ja", ignoreCase = true) -> "コンボ x4"
-                currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "Kombo x4"
-                else -> "Combo x4"
+                currentLanguage.equals("ja", ignoreCase = true) -> "コンボ X4"
+                currentLanguage.equals("in", ignoreCase = true) || currentLanguage.equals("id", ignoreCase = true) -> "KOMBO X4"
+                else -> "COMBO X4"
             }
             FruitNinja3DText(
                 text = displayText,
