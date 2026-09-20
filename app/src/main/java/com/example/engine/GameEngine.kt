@@ -840,9 +840,14 @@ class GameEngine(
                 score += finalPoints
                 strokePointsEarned += finalPoints
 
-                val burstColor = 0xFFFFC857
-                spawnParticleBurst(hitX, hitY, count = 26, color = burstColor)
-                spawnParticleBurst(hitX, hitY, count = 10, color = 0xFFFFD700)
+                val particleCountMult = if (comboMultiplier >= 4) 3 else 1
+                
+                spawnParticleBurst(hitX, hitY, count = 26 * particleCountMult, color = 0xFFFFC857)
+                spawnParticleBurst(hitX, hitY, count = 10 * particleCountMult, color = 0xFFFFD700)
+
+                if (comboMultiplier >= 4) {
+                    spawnParticleBurst(hitX, hitY, count = 15, color = 0xFF00E5FF) 
+                }
 
                 val comboLabel = when {
                     currentLanguage.equals("ja", ignoreCase = true) -> "コンボ X4"
