@@ -934,10 +934,9 @@ private fun ComplianceRulesTable(
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
     
-    // PERBAIKAN: Lebar dikecilkan lagi menjadi 21% dan batas maksimal diturunkan ke 190.dp
-    // agar tingginya tidak memakan ruang bawah layar
+    // Lebar kartu sedikit dipangkas untuk Landscape agar tingginya tidak menyentuh dasar layar
     val responsiveCardWidth = if (isLandscape) {
-        (configuration.screenWidthDp * 0.21f).dp.coerceAtMost(190.dp) 
+        (configuration.screenWidthDp * 0.20f).dp.coerceAtMost(180.dp) 
     } else {
         (configuration.screenWidthDp * 0.65f).dp.coerceAtMost(280.dp)
     }
@@ -958,24 +957,22 @@ private fun ComplianceRulesTable(
             else -> R.drawable.title_how_to_play_en
         }
         
-        // PERBAIKAN: Tinggi judul HOW TO PLAY dikurangi dan jarak bawahnya dirapatkan
+        // DIBESARKAN: How To Play sekarang lebih dominan
         Image(
             painter = painterResource(id = howToPlayDrawable),
             contentDescription = "How To Play",
             modifier = Modifier
-                .height(28.dp) // Dikecilkan dari 35.dp
-                .padding(bottom = 2.dp), // Dirapatkan dari 6.dp
+                .height(40.dp) // DIBESARKAN dari 28.dp ke 40.dp
+                .padding(bottom = 0.dp), // Jarak dihilangkan total
             contentScale = ContentScale.Fit
         )
         
-        // Horizontally Draggable 4-Category Carousel
         LazyRow(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp) // Vertical padding dihilangkan
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
         ) {
-            // Scroll 1: SLICE — Violations
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_slice_violations_header).replace("—", "-"),
@@ -986,8 +983,6 @@ private fun ComplianceRulesTable(
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
-
-            // Scroll 2: PROTECT — Legitimate
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_protect_legitimate_header).replace("—", "-"),
@@ -998,8 +993,6 @@ private fun ComplianceRulesTable(
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
-
-            // Scroll 3: AVOID — Traps
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_avoid_legitimate_header).replace("—", "-"),
@@ -1010,8 +1003,6 @@ private fun ComplianceRulesTable(
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
-
-            // Scroll 4: COLLECT — Bonus
             item {
                 NinjaMissionScrollCard(
                     headerTitle = stringResource(R.string.menu_collect_bonus_header).replace("—", "-"),
@@ -1024,12 +1015,12 @@ private fun ComplianceRulesTable(
             }
         }
 
-        // Drag Indicator Bar
+        // INDIKATOR DITARIK NAIK MENGGUNAKAN OFFSET NEGATIF
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                // PERBAIKAN: Jarak atas (top) dipangkas dari 10.dp menjadi 2.dp agar teks indikator naik ke atas
-                .padding(top = 2.dp, bottom = 4.dp), 
+                .offset(y = (-6).dp) // Ditarik paksa naik 6 piksel ke atas
+                .padding(bottom = 0.dp), 
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1040,11 +1031,8 @@ private fun ComplianceRulesTable(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.4.sp
             )
-
             Spacer(modifier = Modifier.width(8.dp))
-
             val activeScrollPage = listState.firstVisibleItemIndex.coerceIn(0, 3)
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -1361,6 +1349,7 @@ private fun NinjaMissionScrollCard(
                             end = cardWidth * 0.155f
                         )
                         .height(cardHeight * 0.605f),
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy((5f * scaleFactor).dp, Alignment.Top)
                 ) {
                     for (item in items) {
