@@ -936,7 +936,7 @@ private fun ComplianceRulesTable(
     
     // Lebar kartu sedikit dipangkas untuk Landscape agar tingginya tidak menyentuh dasar layar
     val responsiveCardWidth = if (isLandscape) {
-        (configuration.screenWidthDp * 0.24f).dp.coerceAtMost(280.dp) 
+        (configuration.screenWidthDp * 0.21f).dp.coerceAtMost(240.dp) 
     } else {
         (configuration.screenWidthDp * 0.65f).dp.coerceAtMost(280.dp)
     }
@@ -1277,7 +1277,7 @@ private fun NinjaMissionScrollCard(
             contentAlignment = Alignment.TopCenter
         ) {
             val cardWidth = maxWidth
-            val cardHeight = maxWidth * 1.40f
+            val cardHeight = maxWidth * (1402f / 1122f)
 
             // Scaled font and icon sizing based on card width (referenced to standard 240dp)
             val scaleFactor = (cardWidth.value / 240f).coerceIn(0.7f, 1.8f)
@@ -1348,9 +1348,9 @@ private fun NinjaMissionScrollCard(
                             start = cardWidth * 0.155f,
                             end = cardWidth * 0.155f
                         )
-                        .height(cardHeight * 0.605f)
+                        .height(cardHeight * 0.62f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy((5f * scaleFactor).dp, Alignment.Top)
+                    verticalArrangement = Arrangement.spacedBy((2f * scaleFactor).dp, Alignment.Top)
                 ) {
                     for (item in items) {
                         Row(
