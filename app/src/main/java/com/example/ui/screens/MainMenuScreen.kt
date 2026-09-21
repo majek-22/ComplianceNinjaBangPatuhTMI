@@ -929,8 +929,12 @@ private fun ComplianceRulesTable(
     
     // --- PENAMBAHAN AUTO-SIZE ---
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
     // Mengambil 65% dari lebar layar HP. Akan otomatis mengecil di HP kecil, dan membesar di tablet.
-    val responsiveCardWidth = (configuration.screenWidthDp * 0.65f).dp 
+    val responsiveCardWidth = if (isLandscape) {
+        (configuration.screenWidthDp * 0.35f).dp.coerceAtMost(240.dp)
+    } else {
+        (configuration.screenWidthDp * 0.68f).dp.coerceAtMost(280.dp)
     // ----------------------------
 
     val violationEntries = remember { GlossaryEntry.ALL_ENTRIES.filter { it.section == GlossarySection.VIOLATIONS } }

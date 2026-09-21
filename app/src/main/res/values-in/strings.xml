@@ -120,7 +120,7 @@
     <string name="cat_certification">Sertifikasi</string>
     <string name="cat_verified_invoice">Faktur Terverifikasi</string>
     <string name="cat_shield">Perisai Kepatuhan</string>
-    <string name="cat_bonus_corruptor">Corruptor</string>
+    <string name="cat_bonus_corruptor">Koruptor</string>
 
     <!-- Traps (Decoys - Avoid Slicing) -->
     <string name="cat_false_alarm">Alarm Palsu</string>
@@ -149,7 +149,7 @@
     <string name="freeze_bonus_title">FREEZE BONUS! 5 DETIK</string>
     <string name="freeze_bonus_subtitle">Bebas tebas sebanyak-banyaknya untuk raih skor bonus!</string>
     <string name="freeze_bonus_hud_title">❄️ BONUS BEKU! ❄️</string>
-    <string name="freeze_bonus_corruptor_sub">Tebas Corruptor Bebas! %1$d Tebasan (+%2$d Poin)</string>
+    <string name="freeze_bonus_corruptor_sub">Tebas Koruptor Bebas! %1$d Tebasan (+%2$d Poin)</string>
     <string name="freeze_bonus_complete">FREEZE SELESAI! +%1$d POIN (%2$d Tebasan)</string>
 
     <!-- Glossary Screen -->
