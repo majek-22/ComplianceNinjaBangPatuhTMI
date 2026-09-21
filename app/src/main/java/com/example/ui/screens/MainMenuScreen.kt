@@ -936,7 +936,7 @@ private fun ComplianceRulesTable(
     
     // Lebar kartu sedikit dipangkas untuk Landscape agar tingginya tidak menyentuh dasar layar
     val responsiveCardWidth = if (isLandscape) {
-        (configuration.screenWidthDp * 0.20f).dp.coerceAtMost(180.dp) 
+        (configuration.screenWidthDp * 0.24f).dp.coerceAtMost(280.dp) 
     } else {
         (configuration.screenWidthDp * 0.65f).dp.coerceAtMost(280.dp)
     }
@@ -970,8 +970,8 @@ private fun ComplianceRulesTable(
         LazyRow(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
         ) {
             item {
                 NinjaMissionScrollCard(
