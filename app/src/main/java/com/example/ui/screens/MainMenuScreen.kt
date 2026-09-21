@@ -440,9 +440,9 @@ fun MainMenuScreen(
                 .testTag("menu_ask_me_button")
         ) {
             Row(
-                modifier = Modifier.padding(start = 12.dp, end = 5.dp, top = 4.dp, bottom = 4.dp),
+                modifier = Modifier.padding(start = 8.dp, end = 3.dp, top = 2.dp, bottom = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // Online indicator dot + "AI Assistant" text
                 Row(
@@ -463,7 +463,7 @@ fun MainMenuScreen(
                     Text(
                         text = aiAssistantLabel,
                         color = Color(0xFFE0F7FA),
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.3.sp
                     )
@@ -472,7 +472,7 @@ fun MainMenuScreen(
                 // Chatbot circular icon inside the unified pill
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(30.dp)
                         .clip(CircleShape)
                         .background(Color(0x3300E5FF))
                         .border(1.dp, Color(0x9900E5FF), CircleShape),
@@ -1277,7 +1277,7 @@ private fun NinjaMissionScrollCard(
             contentAlignment = Alignment.TopCenter
         ) {
             val cardWidth = maxWidth
-            val cardHeight = maxWidth * 1.45f
+            val cardHeight = maxWidth * 1.40f
 
             // Scaled font and icon sizing based on card width (referenced to standard 240dp)
             val scaleFactor = (cardWidth.value / 240f).coerceIn(0.7f, 1.8f)
