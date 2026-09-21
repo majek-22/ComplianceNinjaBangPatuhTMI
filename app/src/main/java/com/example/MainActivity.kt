@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         val decorView = window?.decorView ?: return
         ViewCompat.setWindowInsetsAnimationCallback(
             decorView,
-            object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+            object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_CONTINUE_ON_SUBTREE) {
                 override fun onPrepare(animation: WindowInsetsAnimationCompat) {
                     if ((animation.typeMask and WindowInsetsCompat.Type.ime()) != 0) {
                         isImeAnimationRunning = true
@@ -93,12 +93,12 @@ class MainActivity : AppCompatActivity() {
                     if ((animation.typeMask and WindowInsetsCompat.Type.ime()) != 0) {
                         isImeAnimationRunning = false
                         lastImeHideTimestamp = System.currentTimeMillis()
-                        // Allow IME close animation to fully settle (600ms) before re-hiding navigation bars
+                        // Allow IME close animation to fully settle (800ms) before re-hiding navigation bars
                         decorView.postDelayed({
                             if (!isDestroyed && !isFinishing && !isImeAnimationRunning) {
                                 hideSystemNavigationBar()
                             }
-                        }, 600L)
+                        }, 800L)
                     }
                 }
             }
