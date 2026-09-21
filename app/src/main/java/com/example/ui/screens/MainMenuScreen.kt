@@ -920,6 +920,10 @@ private fun MainMenuTopBar(
 // 4-CATEGORY DRAGGABLE DIRECTIVES COMPARISON TABLE (SLICE, AVOID, PROTECT, COLLECT)
 // =========================================================================
 
+// =========================================================================
+// 4-CATEGORY DRAGGABLE DIRECTIVES COMPARISON TABLE (SLICE, AVOID, PROTECT, COLLECT)
+// =========================================================================
+
 @Composable
 private fun ComplianceRulesTable(
     currentLanguage: String,
@@ -927,14 +931,16 @@ private fun ComplianceRulesTable(
 ) {
     val listState = rememberLazyListState()
     
-    // --- PENAMBAHAN AUTO-SIZE ---
+    // --- PERBAIKAN FINAL: MENAMPILKAN 2 KARTU UTUH ---
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
-    // Mengambil 65% dari lebar layar HP. Akan otomatis mengecil di HP kecil, dan membesar di tablet.
+    
+    // Mode Landscape: 23% agar 2 kartu (Total 46%) muat sempurna di sisi kanan layar
+    // Mode Portrait: 65% karena layar memanjang ke bawah
     val responsiveCardWidth = if (isLandscape) {
-        (configuration.screenWidthDp * 0.35f).dp.coerceAtMost(240.dp)
+        (configuration.screenWidthDp * 0.23f).dp.coerceAtMost(210.dp)
     } else {
-        (configuration.screenWidthDp * 0.68f).dp.coerceAtMost(280.dp)
+        (configuration.screenWidthDp * 0.65f).dp.coerceAtMost(280.dp)
     }
     // ----------------------------
 
@@ -946,7 +952,6 @@ private fun ComplianceRulesTable(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        // Menghapus jarak bawaan kolom agar lebih rapat
         verticalArrangement = Arrangement.spacedBy(0.dp) 
     ) {
         val howToPlayDrawable = when (currentLanguage.lowercase()) {
@@ -955,22 +960,23 @@ private fun ComplianceRulesTable(
             else -> R.drawable.title_how_to_play_en
         }
         
-        // 2. Tampilkan gambar sebagai pengganti teks
+        // Tampilkan gambar HOW TO PLAY
         Image(
             painter = painterResource(id = howToPlayDrawable),
             contentDescription = "How To Play",
             modifier = Modifier
-                .height(40.dp) // Ubah angka ini untuk membesarkan/mengecilkan gambar
+                .height(35.dp) // Sedikit dikecilkan agar hemat ruang vertikal
                 .padding(bottom = 6.dp),
-            contentScale = ContentScale.Fit // Memastikan rasio gambar tidak gepeng
+            contentScale = ContentScale.Fit
         )
+        
         // Horizontally Draggable 4-Category Carousel
         LazyRow(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            // Jarak antar kartu dibuat sedikit lebih renggang agar lebih nyaman
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp)
+            // Jarak antar kartu dirapatkan sedikit agar 2 kartu muat dengan indah
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
         ) {
             // Scroll 1: SLICE — Violations
             item {
@@ -985,7 +991,6 @@ private fun ComplianceRulesTable(
                             name = stringResource(it.nameRes)
                         )
                     },
-                    // --- MENGGUNAKAN LEBAR RESPONSIF ---
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1003,7 +1008,6 @@ private fun ComplianceRulesTable(
                             name = stringResource(it.nameRes)
                         )
                     },
-                    // --- MENGGUNAKAN LEBAR RESPONSIF ---
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1021,7 +1025,6 @@ private fun ComplianceRulesTable(
                             name = stringResource(it.nameRes)
                         )
                     },
-                    // --- MENGGUNAKAN LEBAR RESPONSIF ---
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1039,7 +1042,6 @@ private fun ComplianceRulesTable(
                             name = stringResource(it.nameRes)
                         )
                     },
-                    // --- MENGGUNAKAN LEBAR RESPONSIF ---
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1049,7 +1051,6 @@ private fun ComplianceRulesTable(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                // --- PERBAIKAN: Menghapus offset ekstrem dan menggunakan padding standar ---
                 .padding(top = 10.dp, bottom = 4.dp), 
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
