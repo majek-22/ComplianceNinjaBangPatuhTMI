@@ -931,18 +931,16 @@ private fun ComplianceRulesTable(
 ) {
     val listState = rememberLazyListState()
     
-    // --- PERBAIKAN FINAL: MENAMPILKAN 2 KARTU UTUH ---
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
     
-    // Mode Landscape: 23% agar 2 kartu (Total 46%) muat sempurna di sisi kanan layar
-    // Mode Portrait: 65% karena layar memanjang ke bawah
+    // PERBAIKAN: Lebar dikecilkan lagi menjadi 21% dan batas maksimal diturunkan ke 190.dp
+    // agar tingginya tidak memakan ruang bawah layar
     val responsiveCardWidth = if (isLandscape) {
-        (configuration.screenWidthDp * 0.23f).dp.coerceAtMost(210.dp)
+        (configuration.screenWidthDp * 0.21f).dp.coerceAtMost(190.dp) 
     } else {
         (configuration.screenWidthDp * 0.65f).dp.coerceAtMost(280.dp)
     }
-    // ----------------------------
 
     val violationEntries = remember { GlossaryEntry.ALL_ENTRIES.filter { it.section == GlossarySection.VIOLATIONS } }
     val trapEntries = remember { GlossaryEntry.ALL_ENTRIES.filter { it.section == GlossarySection.TRAPS } }
@@ -960,13 +958,13 @@ private fun ComplianceRulesTable(
             else -> R.drawable.title_how_to_play_en
         }
         
-        // Tampilkan gambar HOW TO PLAY
+        // PERBAIKAN: Tinggi judul HOW TO PLAY dikurangi dan jarak bawahnya dirapatkan
         Image(
             painter = painterResource(id = howToPlayDrawable),
             contentDescription = "How To Play",
             modifier = Modifier
-                .height(35.dp) // Sedikit dikecilkan agar hemat ruang vertikal
-                .padding(bottom = 6.dp),
+                .height(28.dp) // Dikecilkan dari 35.dp
+                .padding(bottom = 2.dp), // Dirapatkan dari 6.dp
             contentScale = ContentScale.Fit
         )
         
@@ -974,9 +972,8 @@ private fun ComplianceRulesTable(
         LazyRow(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            // Jarak antar kartu dirapatkan sedikit agar 2 kartu muat dengan indah
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp) // Vertical padding dihilangkan
         ) {
             // Scroll 1: SLICE — Violations
             item {
@@ -985,12 +982,7 @@ private fun ComplianceRulesTable(
                     headerIconRes = R.drawable.ic_crossed_katanas_gold,
                     headerPlaqueColors = listOf(Color(0xFF7D0827), Color(0xFF560219), Color(0xFF7D0827)),
                     bgImageRes = R.drawable.bg_ninja_scroll,
-                    items = violationEntries.map {
-                        RuleItemData(
-                            iconRes = it.iconRes,
-                            name = stringResource(it.nameRes)
-                        )
-                    },
+                    items = violationEntries.map { RuleItemData(iconRes = it.iconRes, name = stringResource(it.nameRes)) },
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1002,12 +994,7 @@ private fun ComplianceRulesTable(
                     headerIconRes = R.drawable.ic_laurel_shield,
                     headerPlaqueColors = listOf(Color(0xFF0F2E52), Color(0xFF07192E), Color(0xFF0F2E52)),
                     bgImageRes = R.drawable.bg_ninja_scroll_blue,
-                    items = legitimateEntries.map {
-                        RuleItemData(
-                            iconRes = it.iconRes,
-                            name = stringResource(it.nameRes)
-                        )
-                    },
+                    items = legitimateEntries.map { RuleItemData(iconRes = it.iconRes, name = stringResource(it.nameRes)) },
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1019,12 +1006,7 @@ private fun ComplianceRulesTable(
                     headerIconRes = R.drawable.ic_scroll_hazard,
                     headerPlaqueColors = listOf(Color(0xFF6B180A), Color(0xFF400A03), Color(0xFF6B180A)),
                     bgImageRes = R.drawable.bg_ninja_scroll_crimson,
-                    items = trapEntries.map {
-                        RuleItemData(
-                            iconRes = it.iconRes,
-                            name = stringResource(it.nameRes)
-                        )
-                    },
+                    items = trapEntries.map { RuleItemData(iconRes = it.iconRes, name = stringResource(it.nameRes)) },
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
@@ -1036,22 +1018,18 @@ private fun ComplianceRulesTable(
                     headerIconRes = R.drawable.ic_scroll_bonus_gem,
                     headerPlaqueColors = listOf(Color(0xFF0B3D23), Color(0xFF042011), Color(0xFF0B3D23)),
                     bgImageRes = R.drawable.bg_ninja_scroll_green,
-                    items = bonusEntries.map {
-                        RuleItemData(
-                            iconRes = it.iconRes,
-                            name = stringResource(it.nameRes)
-                        )
-                    },
+                    items = bonusEntries.map { RuleItemData(iconRes = it.iconRes, name = stringResource(it.nameRes)) },
                     modifier = Modifier.width(responsiveCardWidth)
                 )
             }
         }
 
-        // Drag Indicator Bar & 4 Dot Indicators for all 4 Mission Scrolls
+        // Drag Indicator Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 4.dp), 
+                // PERBAIKAN: Jarak atas (top) dipangkas dari 10.dp menjadi 2.dp agar teks indikator naik ke atas
+                .padding(top = 2.dp, bottom = 4.dp), 
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
