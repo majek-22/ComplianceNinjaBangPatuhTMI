@@ -939,6 +939,7 @@ private fun ComplianceRulesTable(
         (configuration.screenWidthDp * 0.35f).dp.coerceAtMost(320.dp) 
     } else {
         (configuration.screenWidthDp * 0.68f).dp.coerceAtMost(280.dp)
+    }
 
     val violationEntries = remember { GlossaryEntry.ALL_ENTRIES.filter { it.section == GlossarySection.VIOLATIONS } }
     val trapEntries = remember { GlossaryEntry.ALL_ENTRIES.filter { it.section == GlossarySection.TRAPS } }
