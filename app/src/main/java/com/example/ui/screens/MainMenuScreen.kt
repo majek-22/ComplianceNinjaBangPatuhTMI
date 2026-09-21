@@ -1277,7 +1277,7 @@ private fun NinjaMissionScrollCard(
             contentAlignment = Alignment.TopCenter
         ) {
             val cardWidth = maxWidth
-            val cardHeight = maxWidth * (1402f / 1122f)
+            val cardHeight = maxWidth * 1.45f
 
             // Scaled font and icon sizing based on card width (referenced to standard 240dp)
             val scaleFactor = (cardWidth.value / 240f).coerceIn(0.7f, 1.8f)
