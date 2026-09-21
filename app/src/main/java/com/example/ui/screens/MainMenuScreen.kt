@@ -1348,7 +1348,7 @@ private fun NinjaMissionScrollCard(
                             start = cardWidth * 0.155f,
                             end = cardWidth * 0.155f
                         )
-                        .height(cardHeight * 0.605f),
+                        .height(cardHeight * 0.605f)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy((5f * scaleFactor).dp, Alignment.Top)
                 ) {
